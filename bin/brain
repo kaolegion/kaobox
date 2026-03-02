@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+set -e
+
+BRAIN_LIB="/opt/kaobox/lib/brain"
+
+source "$BRAIN_LIB/env.sh"
+source "$BRAIN_LIB/logger.sh"
+source "$BRAIN_LIB/lock.sh"
+source "$BRAIN_LIB/preflight.sh"
+source "$BRAIN_LIB/sanitize.sh"
+
+source "$BRAIN_LIB/commands/fuzzy.sh"
+source "$BRAIN_LIB/commands/search.sh"
+source "$BRAIN_LIB/commands/new.sh"
+source "$BRAIN_LIB/commands/open.sh"
+source "$BRAIN_LIB/commands/ls.sh"
+source "$BRAIN_LIB/commands/reindex.sh"
+source "$BRAIN_LIB/commands/doctor.sh"
+
+source "$BRAIN_LIB/dispatcher.sh"
+
+main() {
+    acquire_lock
+    preflight_check
+    dispatch "$@"
+}
+
+main "$@"

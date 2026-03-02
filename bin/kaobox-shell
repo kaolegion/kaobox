@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+KAOBOX_DIR="/opt/kaobox"
+PROFILES_DIR="$KAOBOX_DIR/profiles"
+
+clear
+echo "KAOBOX Environment Loaded"
+echo "Type 'exit' to leave Kaobox"
+echo ""
+
+while true; do
+    read -p "kaobox> " cmd
+
+    case "$cmd" in
+        exit)
+            echo "Leaving Kaobox..."
+            break
+            ;;
+        help)
+            echo "Available commands:"
+            echo " help  - show this help"
+            echo " exit  - leave kaobox"
+            ;;
+        *)
+            bash -c "$cmd"
+            ;;
+    esac
+done

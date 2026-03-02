@@ -1,0 +1,306 @@
+     1	#!/usr/bin/env bash
+     2	
+     3	# ==========================================
+     4	# KAOBOX BRAIN CLI
+     5	# Module: memory search interface
+     6	# FTS5 powered search
+     7	# ==========================================
+     8	
+     9	set -e
+    10	
+    11	readonly BRAIN_DB="/data/brain/.index/brain.db"
+    12	
+    13	if [ ! -f "$BRAIN_DB" ]; then
+    14	  echo "Brain database not found at $BRAIN_DB"
+    15	  exit 1
+    16	fi
+    17	
+    18	usage() {
+    19	    echo "Usage:"
+    20	    echo "  brain new \"Titre\""
+    21	    echo "  brain search <query>"
+    22	    echo "  brain search tag:<tag>"
+    23	    echo "  brain open <filename>"
+    24	    echo "  brain ls"
+    25	    echo "  brain reindex"
+    26	    exit 1
+    27	}
+    28	
+    29	# ==========================================
+    30	# SANITIZE HELPERS
+    31	# ==========================================
+    32	
+    33	sanitize_sql() {
+    34	    echo "$1" | sed "s/'/''/g"
+    35	}
+    36	
+    37	sanitize_fts() {
+    38	    echo "$1" \
+    39	    | sed "s/['\";()]/ /g" \
+    40	    | sed "s/--/ /g" \
+    41	    | sed "s/[^a-zA-Z0-9_ ]/ /g"
+    42	}
+    43	
+    44	# ==========================================
+    45	# FUZZY MODE (no arguments)
+    46	# ==========================================
+    47	
+    48	if [ $# -eq 0 ]; then
+    49	
+    50	    selected=$(
+    51	        sqlite3 -separator "|" "$BRAIN_DB" "
+    52	        SELECT
+    53	            notes.id,
+    54	            notes.title,
+    55	            notes.updated_at,
+    56	            IFNULL(GROUP_CONCAT('#' || tags.name, ' '), '')
+    57	        FROM notes
+    58	        LEFT JOIN note_tags ON notes.id = note_tags.note_id
+    59	        LEFT JOIN tags ON tags.id = note_tags.tag_id
+    60	        GROUP BY notes.id
+    61	        ORDER BY notes.updated_at DESC;
+    62	        " | while IFS="|" read -r id title date tags; do
+    63	                printf "%s|%-30s | %s | %s\n" "$id" "$title" "$date" "$tags"
+    64	        done | fzf \
+    65	            --delimiter="|" \
+    66	            --layout=reverse \
+    67	            --height=90% \
+    68	            --border \
+    69	            --prompt="🧠 Brain > " \
+    70	            --preview='
+    71	                ID=$(echo {} | cut -d"|" -f1)
+    72	                FILE=$(sqlite3 '"$BRAIN_DB"' "SELECT path FROM notes WHERE id=$ID;")
+    73	                bat --style=numbers --color=always --line-range=:500 "$FILE"
+    74	            ' \
+    75	            --preview-window=right:65%
+    76	    )
+    77	
+    78	    [ -z "$selected" ] && exit 0
+    79	
+    80	    note_id=$(echo "$selected" | cut -d'|' -f1)
+    81	
+    82	    filepath=$(sqlite3 "$BRAIN_DB" "
+    83	        SELECT path FROM notes
+    84	        WHERE id=$note_id
+    85	        LIMIT 1;
+    86	    ")
+    87	
+    88	    ${EDITOR:-micro} "$filepath"
+    89	    exit 0
+    90	fi
+    91	
+    92	command="$1"
+    93	
+    94	# ==========================================
+    95	# SEARCH
+    96	# ==========================================
+    97	
+    98	if [ "$command" = "search" ]; then
+    99	
+   100	    [ $# -lt 2 ] && usage
+   101	
+   102	    raw_query="$2"
+   103	
+   104	    # --- TAG MODE ---
+   105	    if [[ "$raw_query" == tag:* ]]; then
+   106	
+   107	        raw_tag="${raw_query#tag:}"
+   108	        tag_safe=$(sanitize_sql "$raw_tag")
+   109	
+   110	        [ -z "$tag_safe" ] && { echo "Empty tag."; exit 1; }
+   111	
+   112	        sqlite3 "$BRAIN_DB" "
+   113	        SELECT notes.id, notes.title
+   114	        FROM notes
+   115	        JOIN note_tags ON notes.id = note_tags.note_id
+   116	        JOIN tags ON tags.id = note_tags.tag_id
+   117	        WHERE tags.name = '$tag_safe';
+   118	        "
+   119	
+   120	        exit 0
+   121	    fi
+   122	
+   123	    # --- FULL TEXT MODE ---
+   124	    
+   125	    fts_safe=$(sanitize_fts "$raw_query")
+   126	    fts_safe=$(sanitize_sql "$fts_safe")
+   127	    
+   128	    if [ -z "$fts_safe" ]; then
+   129	        echo "Invalid search query."
+   130	        exit 1
+   131	    fi
+   132	    
+   133	    sqlite3 "$BRAIN_DB" "
+   134	    SELECT DISTINCT rowid, title
+   135	    FROM notes_fts
+   136	    WHERE notes_fts MATCH '$fts_safe'
+   137	    ORDER BY rank;
+   138	    "
+   139	    exit 0
+   140	fi
+   141	
+   142	# ==========================================
+   143	# OPEN
+   144	# ==========================================
+   145	
+   146	if [ "$command" = "open" ]; then
+   147	
+   148	    [ $# -lt 2 ] && usage
+   149	
+   150	    raw_filename="$2"
+   151	    [ -z "$raw_filename" ] && { echo "Empty filename."; exit 1; }
+   152	
+   153	    filename_safe=$(sanitize_sql "$raw_filename")
+   154	
+   155	    filepath=$(sqlite3 "$BRAIN_DB" "
+   156	        SELECT path FROM notes
+   157	        WHERE path LIKE '%' || '$filename_safe' || '%'
+   158	        LIMIT 1;
+   159	    ")
+   160	
+   161	    [ -z "$filepath" ] && { echo "Note not found."; exit 1; }
+   162	
+   163	    ${EDITOR:-micro} "$filepath"
+   164	    exit 0
+   165	fi
+   166	
+   167	# ==========================================
+   168	# NEW NOTE
+   169	# ==========================================
+   170	
+   171	if [ "$command" = "new" ]; then
+   172	
+   173	    [ $# -lt 2 ] && usage
+   174	
+   175	    title="$2"
+   176	
+   177	    slug=$(echo "$title" | tr '[:upper:]' '[:lower:]' | tr ' ' '-' | tr -cd 'a-z0-9-_')
+   178	    filepath="/data/brain/notes/$slug.md"
+   179	
+   180	    [ -f "$filepath" ] && { echo "Note already exists."; exit 1; }
+   181	
+   182	    cat > "$filepath" <<EOF
+   183	# $title
+   184	
+   185	Tags: #
+   186	
+   187	Résumé:
+   188	
+   189	---
+   190	
+   191	EOF
+   192	
+   193	    /opt/kaobox/modules/memory/index.sh index "$filepath"
+   194	
+   195	    ${EDITOR:-micro} "$filepath"
+   196	    exit 0
+   197	fi
+   198	
+   199	# ==========================================
+   200	# LIST NOTES
+   201	# ==========================================
+   202	
+   203	if [ "$command" = "ls" ]; then
+   204	
+   205	    sqlite3 -separator "|" "$BRAIN_DB" "
+   206	    SELECT
+   207	        notes.id,
+   208	        notes.title,
+   209	        notes.updated_at,
+   210	        IFNULL(GROUP_CONCAT(tags.name, ','), '')
+   211	    FROM notes
+   212	    LEFT JOIN note_tags ON notes.id = note_tags.note_id
+   213	    LEFT JOIN tags ON tags.id = note_tags.tag_id
+   214	    GROUP BY notes.id
+   215	    ORDER BY notes.updated_at DESC;
+   216	    " | while IFS="|" read -r id title date tags; do
+   217	
+   218	        printf "\n%s\n" "$title"
+   219	        printf "Date: %s\n" "$date"
+   220	        [ -n "$tags" ] && printf "Tags: %s\n" "$tags"
+   221	        printf "%s\n" "----------------------------------------"
+   222	    done
+   223	
+   224	    exit 0
+   225	fi
+   226	
+   227	# ==========================================
+   228	# DOCTOR
+   229	# ==========================================
+   230	
+   231	if [ "$command" = "doctor" ]; then
+   232	
+   233	    echo "[Brain] Running diagnostics..."
+   234	
+   235	    # Check DB
+   236	    if [ ! -f "$BRAIN_DB" ]; then
+   237	        echo "❌ Database not found at $BRAIN_DB"
+   238	        exit 1
+   239	    else
+   240	        echo "✅ Database present"
+   241	    fi
+   242	
+   243	    # Check notes directory
+   244	    if [ ! -d "/data/brain/notes" ]; then
+   245	        echo "❌ Notes directory missing"
+   246	        exit 1
+   247	    else
+   248	        echo "✅ Notes directory present"
+   249	    fi
+   250	
+   251	    # Check tables
+   252	    tables=$(sqlite3 "$BRAIN_DB" ".tables")
+   253	
+   254	    echo "$tables" | grep -q "notes" || { echo "❌ Table 'notes' missing"; exit 1; }
+   255	    echo "$tables" | grep -q "tags" || { echo "❌ Table 'tags' missing"; exit 1; }
+   256	    echo "$tables" | grep -q "note_tags" || { echo "❌ Table 'note_tags' missing"; exit 1; }
+   257	    echo "$tables" | grep -q "notes_fts" || { echo "❌ Table 'notes_fts' missing"; exit 1; }
+   258	
+   259	    echo "✅ All required tables present"
+   260	
+   261	    echo "🧠 Brain status: HEALTHY"
+   262	    exit 0
+   263	fi
+   264	
+   265	# ==========================================
+   266	# REINDEX ALL NOTES
+   267	# ==========================================
+   268	
+   269	if [ "$command" = "reindex" ]; then
+   270	
+   271	    echo "[Brain] Reindexing all notes..."
+   272	
+   273	    find /data/brain/notes -type f -name "*.md" | while read -r file; do
+   274	        /opt/kaobox/modules/memory/index.sh index "$file"
+   275	    done
+   276	
+   277	    echo "[Brain] Reindex complete."
+   278	    exit 0
+   279	fi
+   280	
+   281	# ==========================================
+   282	# HELP
+   283	# ==========================================
+   284	
+   285	if [ "$command" = "help" ]; then
+   286	    usage
+   287	fi
+   288	
+   289	# ==========================================
+   290	# FALLBACK → safe search
+   291	# ==========================================
+   292	
+   293	raw_query="$1"
+   294	
+   295	fts_safe=$(sanitize_fts "$raw_query")
+   296	fts_safe=$(sanitize_sql "$fts_safe")
+   297	
+   298	[ -z "$fts_safe" ] && { echo "Invalid search query."; exit 1; }
+   299	
+   300	sqlite3 "$BRAIN_DB" "
+   301	SELECT DISTINCT rowid, title
+   302	FROM notes_fts
+   303	WHERE notes_fts MATCH '$fts_safe'
+   304	ORDER BY rank;
+   305	"
+   306	exit 0
