@@ -6,6 +6,10 @@ set -euo pipefail
     return 1
 }
 
+# --------------------------------------------------
+# Utils
+# --------------------------------------------------
+
 _check_absolute_path() {
     local path="$1"
     [[ "$path" == /* ]] || {
@@ -17,10 +21,6 @@ _check_absolute_path() {
 _sql_escape() {
     printf "%s" "$1" | sed "s/'/''/g"
 }
-
-# ---------------------------------------------
-# Metadata extraction
-# ---------------------------------------------
 
 _get_file_metadata() {
     local file="$1"
@@ -37,27 +37,24 @@ _get_file_metadata() {
     echo "$hash|$mtime|$size"
 }
 
-# ---------------------------------------------
-# Check if reindex needed
-# ---------------------------------------------
-
 _should_reindex() {
     local file="$1"
 
-    local metadata
-    metadata=$(_get_file_metadata "$file")
-
-    local new_hash new_mtime new_size
-    IFS="|" read -r new_hash new_mtime new_size <<< "$metadata"
+    local safe_file
+    safe_file="$(_sql_escape "$file")"
 
     local row
     row=$(sqlite3 "$BRAIN_DB" \
-        "SELECT content_hash, file_mtime, file_size FROM notes WHERE path='$(_sql_escape "$file")';" \
+        "SELECT content_hash, file_mtime, file_size FROM notes WHERE path='$safe_file';" \
         || true)
 
-    if [[ -z "$row" ]]; then
-        return 0
-    fi
+    [[ -z "$row" ]] && return 0
+
+    local new_meta
+    new_meta=$(_get_file_metadata "$file")
+
+    local new_hash new_mtime new_size
+    IFS="|" read -r new_hash new_mtime new_size <<< "$new_meta"
 
     local old_hash old_mtime old_size
     IFS="|" read -r old_hash old_mtime old_size <<< "$row"
@@ -71,18 +68,18 @@ _should_reindex() {
     return 0
 }
 
-# ---------------------------------------------
-# Build SQL
-# ---------------------------------------------
+# --------------------------------------------------
+# SQL Builder (notes + FTS + tags)
+# --------------------------------------------------
 
 _build_index_sql() {
     local file="$1"
 
-    local metadata
-    metadata=$(_get_file_metadata "$file")
+    local meta
+    meta=$(_get_file_metadata "$file")
 
     local hash mtime size
-    IFS="|" read -r hash mtime size <<< "$metadata"
+    IFS="|" read -r hash mtime size <<< "$meta"
 
     local title
     title="$(_sql_escape "$(basename "$file")")"
@@ -93,6 +90,9 @@ _build_index_sql() {
     local safe_hash
     safe_hash="$(_sql_escape "$hash")"
 
+    local content
+    content="$(_sql_escape "$(cat "$file")")"
+
     local tags
     tags=$(grep -i '^Tags:' "$file" 2>/dev/null \
         | sed 's/^Tags:[[:space:]]*//' \
@@ -100,7 +100,7 @@ _build_index_sql() {
         | sed 's/#//' \
         | sort -u || true)
 
-    cat <<SQL
+cat <<SQL
 INSERT INTO notes (title, path, updated_at, content_hash, file_mtime, file_size)
 VALUES ('$title', '$safe_file', datetime('now'),
         '$safe_hash', $mtime, $size)
@@ -113,13 +113,21 @@ ON CONFLICT(path) DO UPDATE SET
 
 DELETE FROM note_tags
 WHERE note_id = (SELECT id FROM notes WHERE path='$safe_file');
+
+DELETE FROM notes_fts
+WHERE rowid = (SELECT id FROM notes WHERE path='$safe_file');
+
+INSERT INTO notes_fts (rowid, title, content)
+SELECT id, '$title', '$content'
+FROM notes
+WHERE path='$safe_file';
 SQL
 
     for tag in $tags; do
         local safe_tag
         safe_tag="$(_sql_escape "$tag")"
 
-        cat <<SQL
+cat <<SQL
 INSERT INTO tags(name)
 VALUES ('$safe_tag')
 ON CONFLICT(name) DO NOTHING;
@@ -133,9 +141,9 @@ SQL
     done
 }
 
-# ---------------------------------------------
-# Index single
-# ---------------------------------------------
+# --------------------------------------------------
+# Public API
+# --------------------------------------------------
 
 index_note() {
     local file="$1"
@@ -162,20 +170,41 @@ EOF
     log INFO "Indexed: $file"
 }
 
-# ---------------------------------------------
-# GC removed files
-# ---------------------------------------------
-
 garbage_collect() {
     sqlite3 "$BRAIN_DB" "SELECT path FROM notes;" | while read -r path; do
         if [[ ! -f "$path" ]]; then
+            local safe_path
+            safe_path="$(_sql_escape "$path")"
+
             sqlite3 "$BRAIN_DB" <<EOF
 BEGIN IMMEDIATE;
-DELETE FROM note_tags WHERE note_id = (SELECT id FROM notes WHERE path='$(_sql_escape "$path")');
-DELETE FROM notes WHERE path='$(_sql_escape "$path")';
+DELETE FROM note_tags
+WHERE note_id = (SELECT id FROM notes WHERE path='$safe_path');
+DELETE FROM notes_fts
+WHERE rowid = (SELECT id FROM notes WHERE path='$safe_path');
+DELETE FROM notes
+WHERE path='$safe_path';
 COMMIT;
 EOF
             log INFO "Removed missing file: $path"
         fi
     done
+}
+
+reindex_all() {
+    local files=("$@")
+
+    [[ ${#files[@]} -eq 0 ]] && return 0
+
+    sqlite3 "$BRAIN_DB" <<EOF
+PRAGMA foreign_keys=ON;
+PRAGMA busy_timeout=5000;
+BEGIN IMMEDIATE;
+$(for f in "${files[@]}"; do
+    _build_index_sql "$f"
+done)
+COMMIT;
+EOF
+
+    log INFO "Batch reindex completed (${#files[@]} files)"
 }
