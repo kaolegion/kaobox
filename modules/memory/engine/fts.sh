@@ -9,8 +9,6 @@ set -euo pipefail
 # Must be executed inside an active transaction.
 # ==========================================================
 
-source "$(dirname "$0")/utils.sh"
-
 fts_sql() {
     local path="$1"
     local title="$2"

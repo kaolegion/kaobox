@@ -9,8 +9,6 @@ set -euo pipefail
 # Must run inside active transaction.
 # ==========================================================
 
-source "$(dirname "$0")/utils.sh"
-
 extract_links() {
     grep -oE '\[\[[^]]+\]\]' "$1" \
         | sed 's/\[\[//;s/\]\]//' \

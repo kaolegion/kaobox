@@ -9,8 +9,6 @@ set -euo pipefail
 # Orchestrator manages execution & transactions.
 # ==========================================================
 
-source "$(dirname "$0")/utils.sh"
-
 compute_hash() {
     sha256sum "$1" | awk '{print $1}'
 }

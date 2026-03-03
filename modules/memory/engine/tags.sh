@@ -9,8 +9,6 @@ set -euo pipefail
 # Must run inside active transaction.
 # ==========================================================
 
-source "$(dirname "$0")/utils.sh"
-
 # Extract hashtags: #tag
 extract_tags() {
     grep -oE '#[A-Za-z0-9_-]+' "$1" \

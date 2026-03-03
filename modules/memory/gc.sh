@@ -15,8 +15,6 @@ set -euo pipefail
 #     * Orphan FTS rows
 # ==========================================================
 
-source "$(dirname "$0")/engine/utils.sh"
-
 gc_sql() {
     local notes_dir="$1"
 
