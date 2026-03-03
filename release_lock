@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+
+source /opt/kaobox/lib/brain/lock.sh
+
+acquire_lock
+
+# logique index
+
+release_lock

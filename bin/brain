@@ -1,14 +1,20 @@
 #!/usr/bin/env bash
-set -e
+set -euo pipefail
 
+BRAIN_MOD="/opt/kaobox/modules"
 BRAIN_LIB="/opt/kaobox/lib/brain"
 
+# Core
 source "$BRAIN_LIB/env.sh"
 source "$BRAIN_LIB/logger.sh"
 source "$BRAIN_LIB/lock.sh"
 source "$BRAIN_LIB/preflight.sh"
 source "$BRAIN_LIB/sanitize.sh"
 
+# Modules
+source "$BRAIN_MOD/memory/index.sh"
+
+# Commands
 source "$BRAIN_LIB/commands/fuzzy.sh"
 source "$BRAIN_LIB/commands/search.sh"
 source "$BRAIN_LIB/commands/new.sh"
@@ -20,8 +26,10 @@ source "$BRAIN_LIB/commands/doctor.sh"
 source "$BRAIN_LIB/dispatcher.sh"
 
 main() {
-    acquire_lock
-    preflight_check
+    acquire_lock || exit 1
+    trap release_lock EXIT
+
+    preflight_check || exit 1
     dispatch "$@"
 }
 

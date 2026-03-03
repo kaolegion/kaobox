@@ -7,12 +7,18 @@ usage() {
     echo "  brain ls"
     echo "  brain reindex"
     echo "  brain doctor"
-    exit 1
+    exit 0
 }
 
 dispatch() {
+    local cmd="${1:-}"
 
-    case "$1" in
+    if [[ -z "$cmd" ]]; then
+        cmd_fuzzy
+        return
+    fi
+
+    case "$cmd" in
         search) shift; cmd_search "$@" ;;
         new) shift; cmd_new "$@" ;;
         open) shift; cmd_open "$@" ;;
@@ -20,7 +26,6 @@ dispatch() {
         doctor) cmd_doctor ;;
         reindex) cmd_reindex ;;
         help) usage ;;
-        "") cmd_fuzzy ;;
-        *) cmd_search "$1" ;;
+        *) cmd_search "$cmd" ;;
     esac
 }

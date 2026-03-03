@@ -1,0 +1,40 @@
+name: KaoBox CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+      - feature/*
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Étape 1 : Récupérer le code depuis GitHub
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Étape 2 : Configurer Python (si nécessaire pour l'exécution des tests)
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      # Étape 3 : Installer les dépendances Python (si applicable)
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      # Étape 4 : Exécuter les tests pour le module KaoBox
+      - name: Run tests for KaoBox and Brain
+        run: |
+          cd /opt/kaobox/tests
+          python -m unittest discover  # Exécute tous les tests dans /tests/
+
+      # Étape 5 : Déployer KaoBox (exécution du script deploy.sh)
+      - name: Deploy KaoBox
+        run: |
+          cd /opt/kaobox
+          ./deploy.sh

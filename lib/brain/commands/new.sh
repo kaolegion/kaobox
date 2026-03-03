@@ -1,15 +1,36 @@
 cmd_new() {
 
-    [ $# -lt 1 ] && usage
+    [[ -n "${NOTES_DIR:-}" ]] || {
+        echo "[ERROR] NOTES_DIR not defined"
+        return 1
+    }
 
-    title="$1"
+    if [[ $# -lt 1 ]]; then
+        usage
+        return 1
+    fi
 
-    slug=$(echo "$title" \
+    local title="$1"
+
+    # Generate slug
+    local slug
+    slug=$(printf "%s" "$title" \
         | tr '[:upper:]' '[:lower:]' \
         | tr ' ' '-' \
         | tr -cd 'a-z0-9-_')
 
-    filepath="$NOTES_DIR/$slug.md"
+    if [[ -z "$slug" ]]; then
+        echo "[ERROR] Invalid title"
+        return 1
+    fi
+
+    local filepath="$NOTES_DIR/$slug.md"
+
+    # Avoid overwrite
+    if [[ -f "$filepath" ]]; then
+        echo "[ERROR] Note already exists: $filepath"
+        return 1
+    fi
 
     cat > "$filepath" <<EOF
 # $title
@@ -22,9 +43,10 @@ Résumé:
 
 EOF
 
-    "$INDEX_SCRIPT" index "$filepath"
+    # Use internal index function (modular architecture)
+    index_note "$filepath"
 
     log "New note created: $filepath"
 
-    ${EDITOR:-micro} "$filepath"
+    "${EDITOR:-micro}" "$filepath"
 }

@@ -1,5 +1,5 @@
 sanitize_sql() {
-    echo "$1" | sed "s/'/''/g"
+    printf "%s" "$1" | sed "s/'/''/g"
 }
 
 sanitize_fts() {

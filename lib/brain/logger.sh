@@ -1,5 +1,20 @@
-LOG_FILE="/var/log/kaobox/brain.log"
+#!/usr/bin/env bash
+
+readonly LOG_DIR="/var/log/kaobox"
+readonly LOG_FILE="$LOG_DIR/brain.log"
+
+# Ensure log directory exists
+mkdir -p "$LOG_DIR" 2>/dev/null || true
 
 log() {
-    echo "$(date '+%Y-%m-%d %H:%M:%S') | $1" >> "$LOG_FILE"
+    local level="${1:-INFO}"
+    shift || true
+    local message="$*"
+    local timestamp
+    timestamp="$(date '+%Y-%m-%d %H:%M:%S')"
+
+    {
+        flock 200
+        printf "%s | %-5s | %s\n" "$timestamp" "$level" "$message"
+    } 200>>"$LOG_FILE"
 }

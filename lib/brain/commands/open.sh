@@ -1,17 +1,41 @@
 cmd_open() {
 
-    [ $# -lt 1 ] && usage
+    [[ -n "${BRAIN_DB:-}" ]] || {
+        echo "[ERROR] BRAIN_DB not defined"
+        return 1
+    }
 
-    raw_filename="$1"
-    filename_safe=$(sanitize_sql "$raw_filename")
+    if [[ $# -lt 1 ]]; then
+        usage
+        return 1
+    fi
 
-    filepath=$(sqlite3 "$BRAIN_DB" "
-        SELECT path FROM notes
+    local raw_filename="$1"
+
+    # Escape single quotes safely
+    local filename_safe
+    filename_safe="$(printf "%s" "$raw_filename" | sed "s/'/''/g")"
+
+    local query="
+        SELECT path
+        FROM notes
         WHERE path LIKE '%' || '$filename_safe' || '%'
+        ORDER BY updated_at DESC
         LIMIT 1;
-    ")
+    "
 
-    [ -z "$filepath" ] && { echo "Note not found."; exit 1; }
+    local filepath
+    filepath=$(sqlite3 "$BRAIN_DB" "$query")
 
-    ${EDITOR:-micro} "$filepath"
+    if [[ -z "$filepath" ]]; then
+        echo "Note not found."
+        return 1
+    fi
+
+    if [[ ! -f "$filepath" ]]; then
+        echo "File missing on disk: $filepath"
+        return 1
+    fi
+
+    "${EDITOR:-micro}" "$filepath"
 }
