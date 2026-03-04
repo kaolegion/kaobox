@@ -44,9 +44,12 @@ Résumé:
 EOF
 
     # Use internal index function (modular architecture)
-    index_note "$filepath"
+acquire_lock || {
+  echo "❌ Could not acquire lock"
+  return 1
+}
 
-    log "New note created: $filepath"
+index_note "$filepath"
 
-    "${EDITOR:-micro}" "$filepath"
+release_lock
 }

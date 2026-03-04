@@ -20,7 +20,7 @@ cmd_search() {
     if [[ "$raw_query" == tag:* ]]; then
         local raw_tag="${raw_query#tag:}"
         local tag_safe
-        tag_safe="$(printf "%s" "$raw_tag" | sed "s/'/''/g")"
+		tag_safe="$(sanitize_sql "$raw_tag")"
 
         if [[ -z "$tag_safe" ]]; then
             echo "Empty tag."
@@ -52,7 +52,7 @@ cmd_search() {
     # ---------------------------------
 
     local fts_safe
-    fts_safe="$(printf "%s" "$raw_query" | sed "s/'/''/g")"
+	fts_safe="$(sanitize_fts "$raw_query")"
 
     if [[ -z "$fts_safe" ]]; then
         echo "Invalid search query."

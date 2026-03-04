@@ -1,0 +1,70 @@
+# ==========================================================
+# 🧠 KAOBOX SHELL MODULE
+# ==========================================================
+# Purpose  : Centralized shell configuration for KaoBox
+# Philosophy : Modular • Portable • Atomic • Human First
+# Scope    : System-level KaoBox integration
+# ==========================================================
+
+
+# ----------------------------------------------------------
+# 🔒 SAFETY — Interactive shell only
+# ----------------------------------------------------------
+[[ $- != *i* ]] && return
+
+
+# ==========================================================
+# 📂 PATH MANAGEMENT (Atomic)
+# ==========================================================
+
+kaobox_add_to_path() {
+    case ":$PATH:" in
+        *":$1:"*) ;;
+        *) PATH="$1:$PATH" ;;
+    esac
+}
+
+kaobox_add_to_path "/opt/kaobox/bin"
+
+export PATH
+
+
+# ==========================================================
+# ✍️ EDITOR CONFIGURATION
+# ==========================================================
+
+kaobox_detect_editor() {
+    if command -v micro >/dev/null 2>&1; then
+        echo "micro"
+    elif command -v nano >/dev/null 2>&1; then
+        echo "nano"
+    else
+        echo "vi"
+    fi
+}
+
+export EDITOR="${EDITOR:-$(kaobox_detect_editor)}"
+export VISUAL="${VISUAL:-$EDITOR}"
+
+
+# ==========================================================
+# 🎯 ALIASES
+# ==========================================================
+
+alias kb='cd /opt/kaobox'
+alias brainlog='tail -f /opt/kaobox/logs/brain.log'
+
+
+# ==========================================================
+# 🔌 COMPLETION SUPPORT (if available)
+# ==========================================================
+
+if [[ -f /etc/bash_completion ]] && ! shopt -oq posix; then
+    . /etc/bash_completion
+fi
+
+
+# ==========================================================
+# 🧪 DEBUG
+# ==========================================================
+# echo "[KAOBOX SHELL] Loaded | EDITOR=$EDITOR"

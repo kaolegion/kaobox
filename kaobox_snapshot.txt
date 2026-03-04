@@ -1,0 +1,2463 @@
+### KAOBOX FULL SNAPSHOT ###
+Generated: Tue Mar  3 15:39:29 CET 2026
+
+
+############################################################
+### FILE: ./README.md
+############################################################
+# KaoBox
+
+KaoBox est une infrastructure agentique modulaire.
+
+## Structure
+
+- bin/        → CLI et interfaces
+- core/       → moteur système
+- base/       → manifests système
+- modules/    → extensions modulaires
+- state/      → état runtime
+- logs/       → journaux
+- doc/        → documentation officielle
+
+## Philosophie
+
+KaoBox est conçu comme un brain minimaliste,
+modulaire, déterministe et extensible.
+
+## Version
+
+Brain v1 - Initial structured architecture
+
+############################################################
+### FILE: ./core/completion.sh
+############################################################
+# ==========================================================
+# 🧠 KAOBOX BRAIN SMART COMPLETION
+# ==========================================================
+# Dynamic • Context-aware • Safe • Idempotent
+# ==========================================================
+
+[[ $- != *i* ]] && return
+[[ -n "${KAOBOX_COMPLETION_LOADED:-}" ]] && return
+export KAOBOX_COMPLETION_LOADED=1
+
+KAOBOX_ROOT="/opt/kaobox"
+BRAIN_COMMANDS_DIR="$KAOBOX_ROOT/lib/brain/commands"
+BRAIN_DB="${BRAIN_DB:-/data/brain/.index/brain.db}"
+
+_brain_completion() {
+
+    local cur prev
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+
+    COMPREPLY=()
+
+    # ------------------------------------------------------
+    # LEVEL 1 → Subcommands
+    # ------------------------------------------------------
+    if [[ $COMP_CWORD -eq 1 ]]; then
+        if [[ -d "$BRAIN_COMMANDS_DIR" ]]; then
+            local cmds
+            cmds=$(printf "%s\n" "$BRAIN_COMMANDS_DIR"/*.sh 2>/dev/null | \
+                   xargs -n1 basename 2>/dev/null | \
+                   sed 's/\.sh$//' | sort)
+
+            COMPREPLY=( $(compgen -W "$cmds" -- "$cur") )
+        fi
+        return 0
+    fi
+
+    # ------------------------------------------------------
+    # LEVEL 2 → Context
+    # ------------------------------------------------------
+    case "${COMP_WORDS[1]}" in
+
+        open|graph|backlinks)
+            [[ -f "$BRAIN_DB" ]] || return 0
+            local titles
+            titles=$(sqlite3 "$BRAIN_DB" "SELECT title FROM notes;" 2>/dev/null)
+            COMPREPLY=( $(compgen -W "$titles" -- "$cur") )
+            return 0
+            ;;
+
+        search)
+
+            [[ -f "$BRAIN_DB" ]] || return 0
+
+            # tag completion
+            if [[ "$cur" == tag:* ]]; then
+                local tags
+                tags=$(sqlite3 "$BRAIN_DB" "SELECT name FROM tags;" 2>/dev/null)
+
+                local tag_list=""
+                while read -r t; do
+                    [[ -n "$t" ]] && tag_list+="tag:$t "
+                done <<< "$tags"
+
+                COMPREPLY=( $(compgen -W "$tag_list" -- "$cur") )
+                return 0
+            fi
+
+            # fallback → titles
+            local titles
+            titles=$(sqlite3 "$BRAIN_DB" "SELECT title FROM notes;" 2>/dev/null)
+            COMPREPLY=( $(compgen -W "$titles" -- "$cur") )
+            return 0
+            ;;
+    esac
+}
+
+complete -F _brain_completion brain
+
+############################################################
+### FILE: ./core/env.sh
+############################################################
+#!/usr/bin/env bash
+# ==========================================
+# KAOBOX MODULE: env
+# Description: Global environment variables
+# Author: KAOBOX
+# Version: Golden-V1
+# ==========================================
+
+# Prevent multiple sourcing
+[[ -n "${KAOBOX_ENV_LOADED:-}" ]] && return
+readonly KAOBOX_ENV_LOADED=1
+
+# --------------------------------------------------
+# Core Paths
+# --------------------------------------------------
+
+readonly KAOBOX_ROOT="/opt/kaobox"
+readonly KAOBOX_CORE="$KAOBOX_ROOT/core"
+readonly KAOBOX_MODULES="$KAOBOX_ROOT/modules"
+readonly KAOBOX_I18N="$KAOBOX_ROOT/i18n"
+readonly KAOBOX_PROFILES="$KAOBOX_ROOT/profiles"
+
+# --------------------------------------------------
+# Logs
+# --------------------------------------------------
+
+readonly KAOBOX_LOG_DIR="/var/log"
+readonly KAOBOX_LOG_FILE="$KAOBOX_LOG_DIR/kaobox.log"
+
+# --------------------------------------------------
+# System
+# --------------------------------------------------
+
+readonly KAOBOX_VERSION="Golden-V1"
+readonly KAOBOX_RUNTIME="wsl"
+
+# --------------------------------------------------
+# Debug
+# --------------------------------------------------
+
+: "${KAOBOX_DEBUG:=0}"
+export KAOBOX_DEBUG
+
+############################################################
+### FILE: ./core/i18n.sh
+############################################################
+#!/bin/bash
+
+STATE_FILE="/opt/kaobox/state/system.lang"
+LANG_DIR="/opt/kaobox/lang"
+
+# First launch → ask language
+if [ ! -f "$STATE_FILE" ]; then
+    echo "Select language / Choisir la langue:"
+    echo "1) English"
+    echo "2) Français"
+    read -p "Choice: " choice
+
+    case $choice in
+        2) echo "fr" > "$STATE_FILE" ;;
+        *) echo "en" > "$STATE_FILE" ;;
+    esac
+fi
+
+KAO_LANG=$(cat "$STATE_FILE")
+LANG_FILE="${LANG_DIR}/${KAO_LANG}.sh"
+
+# Load language file
+if [ -f "$LANG_FILE" ]; then
+    source "$LANG_FILE"
+else
+    echo "Language file not found: $LANG_FILE"
+    exit 1
+fi
+
+# Translation function
+t() {
+    eval echo "\$$1"
+}
+
+############################################################
+### FILE: ./core/init.sh
+############################################################
+#!/usr/bin/env bash
+
+set -e
+
+KAOBOX_DIR="/opt/kaobox"
+PROFILES_DIR="$KAOBOX_DIR/profiles"
+STATE_DIR="$KAOBOX_DIR/state"
+
+# Load i18n
+source "$KAOBOX_DIR/core/i18n.sh"
+
+clear
+echo "===================================="
+echo "        $(t WELCOME_TITLE)"
+echo "===================================="
+echo ""
+
+# Ensure kaobox group exists
+if ! getent group kaobox > /dev/null; then
+    groupadd kaobox
+fi
+
+# If profiles exist → propose load
+if [ -d "$PROFILES_DIR" ] && [ "$(ls -A "$PROFILES_DIR")" ]; then
+    echo "$(t EXISTING_PROFILES)"
+    ls "$PROFILES_DIR"
+    echo ""
+    echo "1) $(t LOAD_PROFILE)"
+    echo "2) $(t CREATE_PROFILE)"
+    echo "3) $(t EXIT)"
+    echo ""
+
+    read -p "Choice: " choice
+
+    case "$choice" in
+        1)
+            read -p "Username: " username
+
+            if [ ! -d "$PROFILES_DIR/$username" ]; then
+                echo "Profile does not exist."
+                exit 1
+            fi
+
+            echo "Launching profile..."
+            su - "$username" -c "/opt/kaobox/bin/kaobox-shell"
+            ;;
+
+        2)
+            choice="create"
+            ;;
+
+        *)
+            echo "$(t EXITING)"
+            exit 0
+            ;;
+    esac
+fi
+
+# Create profile path
+echo "$(t NO_PROFILE)"
+echo ""
+echo "1) $(t CREATE_PROFILE)"
+echo "2) $(t EXIT)"
+echo ""
+
+read -p "Choice: " choice
+
+case "$choice" in
+    1|create)
+
+        read -p "Username: " username
+
+        # Validate username
+        if [[ ! "$username" =~ ^[a-z_][a-z0-9_-]*$ ]]; then
+            echo "Invalid username format."
+            exit 1
+        fi
+
+        if [ "$username" = "root" ]; then
+            echo "Username 'root' not allowed."
+            exit 1
+        fi
+
+        if id "$username" &>/dev/null; then
+            echo "Linux user already exists."
+            exit 1
+        fi
+
+        if [ -d "$PROFILES_DIR/$username" ]; then
+            echo "Kaobox profile already exists."
+            exit 1
+        fi
+
+        # Create Linux user
+        adduser "$username"
+
+        # Add to kaobox group
+        usermod -aG kaobox "$username"
+
+        # Create Kaobox profile directory
+        mkdir -p "$PROFILES_DIR/$username"
+
+        {
+            echo "created: $(date)"
+            echo "lang: $(cat "$STATE_DIR/system.lang")"
+        } > "$PROFILES_DIR/$username/profile.meta"
+
+        chown -R "$username:$username" "$PROFILES_DIR/$username"
+
+        echo ""
+        echo "$(t PROFILE_CREATED)"
+        echo "Launching Kaobox profile..."
+        su - "$username" -c "/opt/kaobox/bin/kaobox-shell"
+        ;;
+
+    *)
+        echo "$(t EXITING)"
+        ;;
+esac
+
+############################################################
+### FILE: ./core/logger.sh
+############################################################
+#!/usr/bin/env bash
+# ==========================================
+# KAOBOX MODULE: logger
+# Description: Central logging system
+# Author: KAOBOX
+# Version: Golden-V1
+# ==========================================
+
+# Prevent multiple sourcing
+[[ -n "${KAOBOX_LOGGER_LOADED:-}" ]] && return
+readonly KAOBOX_LOGGER_LOADED=1
+
+# --------------------------------------------------
+# Dependencies
+# --------------------------------------------------
+
+# Requires env.sh
+# TODO: enforce sourcing order via sanity later
+
+# --------------------------------------------------
+# Internal Helpers
+# --------------------------------------------------
+
+_kaobox_timestamp() {
+    date +"%Y-%m-%d %H:%M:%S"
+}
+
+_kaobox_write_log() {
+    local level="$1"
+    local message="$2"
+    local timestamp
+    timestamp="$(_kaobox_timestamp)"
+
+    local formatted="[$timestamp] [$level] $message"
+
+    # Write to file if possible
+    if [[ -n "${KAOBOX_LOG_FILE:-}" ]]; then
+        printf "%s\n" "$formatted" >> "$KAOBOX_LOG_FILE" 2>/dev/null
+    fi
+
+    # Console output rules
+    case "$level" in
+        ERROR)
+            printf "%s\n" "$formatted" >&2
+            ;;
+        WARN|INFO)
+            printf "%s\n" "$formatted"
+            ;;
+        DEBUG)
+            if [[ "${KAOBOX_DEBUG:-0}" -eq 1 ]]; then
+                printf "%s\n" "$formatted"
+            fi
+            ;;
+    esac
+}
+
+# --------------------------------------------------
+# Public API
+# --------------------------------------------------
+
+log_info() {
+    _kaobox_write_log "INFO" "$1"
+}
+
+log_warn() {
+    _kaobox_write_log "WARN" "$1"
+}
+
+log_error() {
+    _kaobox_write_log "ERROR" "$1"
+}
+
+log_debug() {
+    _kaobox_write_log "DEBUG" "$1"
+}
+
+############################################################
+### FILE: ./core/sanity.sh
+############################################################
+#!/usr/bin/env bash
+# ==========================================
+# KAOBOX MODULE: sanity
+# Description: System checks & environment validation
+# Author: KAOBOX
+# Version: Golden-V1
+# ==========================================
+
+# Prevent multiple sourcing
+[[ -n "${KAOBOX_SANITY_LOADED:-}" ]] && return
+readonly KAOBOX_SANITY_LOADED=1
+
+# --------------------------------------------------
+# Dependencies
+# --------------------------------------------------
+
+# Requires:
+# - env.sh
+# - logger.sh
+# TODO: enforce strict load order in init.sh
+
+# --------------------------------------------------
+# Log Directory
+# --------------------------------------------------
+
+ensure_log_directory() {
+    if [[ ! -d "$KAOBOX_LOG_DIR" ]]; then
+        mkdir -p "$KAOBOX_LOG_DIR" 2>/dev/null || {
+            log_error "Unable to create log directory: $KAOBOX_LOG_DIR"
+            return 1
+        }
+        log_info "Created log directory: $KAOBOX_LOG_DIR"
+    fi
+}
+
+# --------------------------------------------------
+# WSL Detection
+# --------------------------------------------------
+
+check_wsl() {
+    if grep -qi microsoft /proc/version 2>/dev/null; then
+        log_debug "WSL environment detected"
+    else
+        log_warn "Not running under WSL (unexpected runtime)"
+        # TODO: allow multi-runtime support later
+    fi
+}
+
+# --------------------------------------------------
+# Required Tools
+# --------------------------------------------------
+
+check_required_tools() {
+
+    # Core minimal tools
+    local required=(
+        bash
+        grep
+        date
+    )
+
+    # TODO: extend with:
+    # bat eza fd fzf ripgrep jq yazi
+
+    for tool in "${required[@]}"; do
+        if ! command -v "$tool" >/dev/null 2>&1; then
+            log_error "Missing required tool: $tool"
+            return 1
+        else
+            log_debug "Tool OK: $tool"
+        fi
+    done
+
+    log_info "All required tools available"
+}
+
+# --------------------------------------------------
+# Permissions
+# --------------------------------------------------
+
+check_permissions() {
+    if [[ ! -w "$KAOBOX_LOG_DIR" ]]; then
+        log_warn "Log directory not writable: $KAOBOX_LOG_DIR"
+        # TODO: handle non-root user case cleanly
+    fi
+}
+
+############################################################
+### FILE: ./core/shell.sh
+############################################################
+# ==========================================================
+# 🧠 KAOBOX CORE SHELL MODULE
+# ==========================================================
+# Interactive shell loader — Deterministic & Idempotent
+# ==========================================================
+
+[[ $- != *i* ]] && return
+
+# Prevent double sourcing
+[[ -n "${KAOBOX_SHELL_LOADED:-}" ]] && return
+export KAOBOX_SHELL_LOADED=1
+
+
+# ----------------------------------------------------------
+# 📍 ROOT
+# ----------------------------------------------------------
+export KAOBOX_ROOT="/opt/kaobox"
+export KAOBOX_BIN="$KAOBOX_ROOT/bin"
+export KAOBOX_LOGS="$KAOBOX_ROOT/logs"
+
+
+# ----------------------------------------------------------
+# 📂 PATH (atomic)
+# ----------------------------------------------------------
+kaobox_add_to_path() {
+    case ":$PATH:" in
+        *":$1:"*) ;;
+        *) PATH="$1:$PATH" ;;
+    esac
+}
+
+[[ -d "$KAOBOX_BIN" ]] && kaobox_add_to_path "$KAOBOX_BIN"
+export PATH
+
+
+# ----------------------------------------------------------
+# ✍️ EDITOR (clean fallback)
+# ----------------------------------------------------------
+kaobox_detect_editor() {
+    command -v micro >/dev/null 2>&1 && { echo micro; return; }
+    command -v nano  >/dev/null 2>&1 && { echo nano;  return; }
+    echo vi
+}
+
+export EDITOR="${EDITOR:-$(kaobox_detect_editor)}"
+export VISUAL="${VISUAL:-$EDITOR}"
+
+
+# ----------------------------------------------------------
+# 🎯 SAFE ALIASES
+# ----------------------------------------------------------
+alias kb="cd \"$KAOBOX_ROOT\""
+
+[[ -d "$KAOBOX_LOGS" ]] && \
+alias brainlog="tail -f \"$KAOBOX_LOGS/brain.log\""
+
+
+# ----------------------------------------------------------
+# 🔌 BASH COMPLETION
+# ----------------------------------------------------------
+if [[ -f /etc/bash_completion ]] && ! shopt -oq posix; then
+    source /etc/bash_completion
+fi
+
+# Load KaoBox completion layer
+[[ -f "$KAOBOX_ROOT/core/completion.sh" ]] && \
+source "$KAOBOX_ROOT/core/completion.sh"
+
+
+# ----------------------------------------------------------
+# 🧪 DEBUG (opt-in only)
+# ----------------------------------------------------------
+if [[ "${KAOBOX_DEBUG:-0}" == "1" ]]; then
+    echo "[KAOBOX] shell loaded"
+fi
+
+############################################################
+### FILE: ./doc/agent/AGENT_SPEC.md
+############################################################
+# KaoBox Agent Specification
+
+## Purpose
+
+The KaoBox Agent is a structured operational intelligence layer
+running on top of the deterministic core.
+
+It does not replace the system.
+It orchestrates it.
+
+---
+
+## Agent Nature
+
+The agent is:
+
+- Deterministic-aware
+- State-conscious
+- Modular
+- Tool-driven
+- Language-aware
+
+It must never:
+- Corrupt core
+- Modify base manifests directly
+- Break deterministic guarantees
+
+---
+
+## Agent Layers
+
+### 1. Perception
+
+Reads:
+- state/
+- manifests
+- module availability
+- environment variables
+
+### 2. Reasoning
+
+Uses:
+- defined tools
+- deterministic scripts
+- explicit logic flows
+
+No hidden state allowed.
+
+### 3. Action
+
+Allowed actions:
+- Execute modules
+- Update runtime state
+- Log operations
+- Trigger safe hooks
+
+Forbidden:
+- Direct modification of core/
+- Direct modification of base/
+
+---
+
+## Memory
+
+Memory is modular.
+
+Current module:
+    modules/memory
+
+Memory must:
+- Be indexed
+- Be explicit
+- Be recoverable
+
+---
+
+## Safety Model
+
+The agent operates under:
+
+- Explicit boundaries
+- Observable actions
+- Logged operations
+
+All state mutation must be traceable.
+
+---
+
+## Evolution
+
+Future agent upgrades must:
+
+- Preserve core determinism
+- Remain modular
+- Be documented in roadmap
+
+############################################################
+### FILE: ./doc/architecture/ARCHITECTURE.md
+############################################################
+## System Layers
+
+### Layer 0 — OS
+Linux environment
+
+### Layer 1 — Kaobox Core
+`core/`
+`init.sh`
+`state/`
+`lang/`
+
+Responsibilities:
+- Bootstrap
+- Environment setup
+- Logging
+- Safety
+- Localization
+
+### Layer 2 — Modules
+`lib/*`
+`modules/*`
+
+Responsibilities:
+- Business logic
+- Storage
+- CLI commands
+
+### Layer 3 — CLI Entrypoints
+`bin/*`
+
+---
+# MAJ-OLD
+
+# KaoBox Architecture
+
+## Overview
+
+KaoBox is a modular agentic infrastructure designed as a deterministic brain system.
+
+Root path:
+    /opt/kaobox
+
+The system is structured in layers.
+
+---
+
+## Layer 1 — Base
+
+Directory:
+    base/
+
+Contains system manifests.
+
+Purpose:
+- Define golden state
+- Define required tools
+- Define minimal runtime expectations
+
+---
+
+## Layer 2 — Core
+
+Directory:
+    core/
+
+Contains the system engine.
+
+Components:
+- env.sh       → environment bootstrap
+- logger.sh    → logging system
+- sanity.sh    → validation checks
+- i18n.sh      → language support
+- init.sh      → system initialization
+
+Core is deterministic and must not depend on modules.
+
+---
+
+## Layer 3 — Modules
+
+Directory:
+    modules/
+
+Optional extensions.
+
+Current module:
+    memory/
+
+Modules must:
+- Be isolated
+- Not modify core directly
+- Use defined hooks
+
+---
+
+## Layer 4 — Runtime State
+
+Directory:
+    state/
+
+Contains:
+- version state
+- language state
+- runtime flags
+
+This directory is mutable.
+
+---
+
+## Layer 5 — Documentation
+
+Directory:
+    doc/
+
+Contains system-level documentation:
+- architecture
+- agent specification
+- roadmap
+- state records
+
+---
+
+## Design Principles
+
+- Deterministic core
+- Modular extensions
+- Explicit state
+- Minimal surface
+- Infrastructure first, intelligence second
+
+############################################################
+### FILE: ./doc/architecture/MODULE_CONTRACT.md
+############################################################
+## Module Communication Contract
+
+- **Core** is responsible for:
+  - Logging
+  - Environment setup
+  - Basic utilities
+  
+- **Modules** must not modify Core functionality.
+- **Modules** can communicate with the Core only through predefined interfaces, such as logging utilities and configuration files.
+
+---
+# MAJ-OLD
+
+# KaoBox Module Contract
+
+## Purpose
+
+Defines how modules are allowed to interact with the KaoBox core.
+
+Modules must extend.
+They must never modify.
+
+---
+
+## Location
+
+All modules must reside in:
+
+    /opt/kaobox/modules/<module_name>/
+
+---
+
+## Required Structure
+
+Each module must contain:
+
+- init.sh        → initialization entrypoint
+- index.sh       → exposed functions registry
+
+Optional:
+- hooks.sh
+- README.md
+- config/
+
+---
+
+## Allowed Interactions
+
+Modules may:
+
+- Read from state/
+- Append to logs/
+- Register commands through defined hooks
+- Execute isolated logic
+
+Modules must NOT:
+
+- Modify core/
+- Modify base/
+- Override bin/brain
+- Directly alter golden.version
+
+---
+
+## Hook System (Planned Phase 2)
+
+Future standard hooks:
+
+- on_init
+- on_before_execute
+- on_after_execute
+- on_shutdown
+
+Hooks must be explicitly registered.
+
+---
+
+## Isolation Rule
+
+Modules must:
+
+- Be self-contained
+- Fail safely
+- Not assume global variables unless defined by core
+
+---
+
+## Determinism Rule
+
+Core must remain deterministic.
+
+Modules may introduce adaptive behavior,
+but never at the cost of core integrity.
+
+############################################################
+### FILE: ./doc/roadmap/ROADMAP.md
+############################################################
+## Roadmap
+
+### Phase 1 — Architecture Freeze
+- Finalize system layer definition
+- Stabilize core module and environment contract
+- Ensure clear separation of concerns between core and modules
+
+### Phase 2 — Feature Development
+- Implement new business logic and modules
+- Expand CLI functionality
+
+---
+# MAJ-OLD
+
+# KaoBox Roadmap
+
+## Phase 1 — Structural Foundation (Current)
+
+- Clean architecture
+- Deterministic core
+- Modular system
+- Documentation baseline
+- Memory module initialized
+
+Status: ACTIVE
+
+---
+
+## Phase 2 — Operational Intelligence
+
+Goals:
+
+- CLI stabilization
+- Brain command normalization
+- Module hook standardization
+- Runtime state validation layer
+
+Expected outcome:
+Stable agentic infrastructure.
+
+---
+
+## Phase 3 — Adaptive Layer
+
+Goals:
+
+- Advanced memory indexing
+- Context-aware execution
+- Multi-module orchestration
+- Observability expansion
+
+Expected outcome:
+Semi-autonomous operational agent.
+
+---
+
+## Phase 4 — Distributed Brain (Long-term)
+
+Goals:
+
+- Multi-instance coordination
+- State replication
+- Remote orchestration
+- External toolchain integration
+
+Expected outcome:
+Distributed agentic system.
+
+---
+
+## Guiding Rule
+
+Infrastructure before intelligence.
+Stability before expansion.
+Determinism before automation.
+
+############################################################
+### FILE: ./doc/roadmap/TODO.md
+############################################################
+# KaoBox TODO
+
+## Immediate
+
+- [ ] Validate core scripts consistency
+- [ ] Standardize brain CLI entrypoint
+- [ ] Define module hook contract
+- [ ] Add structured logging format
+- [ ] Verify state persistence integrity
+
+---
+
+## Short Term
+
+- [ ] Memory indexing improvement
+- [ ] Add state validation script
+- [ ] Create health-check command
+- [ ] Add module enable/disable system
+
+---
+
+## Mid Term
+
+- [ ] Multi-module orchestration
+- [ ] Context layer design
+- [ ] Execution policy framework
+
+---
+
+## Long Term
+
+- [ ] Distributed architecture prototype
+- [ ] Remote node synchronization
+- [ ] External toolchain connectors
+
+############################################################
+### FILE: ./doc/state/PHASE_HISTORY.md
+############################################################
+# KaoBox Phase History
+
+---
+
+## Phase 1 — Structural Foundation
+
+Status: ACTIVE
+Version: v1.0.0-alpha
+
+### Scope
+- Clean architecture
+- Deterministic core separation
+- Module isolation
+- Documentation baseline
+- Roadmap formalized
+
+### Key Decisions
+- /opt/kaobox as single source of truth
+- Deterministic core cannot be modified by modules
+- Explicit runtime state directory
+- Infrastructure before intelligence
+
+### Exit Criteria
+- Core validated
+- CLI normalized
+- Module hook contract defined
+
+---
+
+Future phases will be appended below.
+
+############################################################
+### FILE: ./doc/state/TEST_PROTOCOL.md
+############################################################
+## Test Protocol
+
+### Architecture Validation
+- Ensure no direct modification of Core by modules.
+- Verify all modules interact with Core through predefined interfaces.
+
+---
+# MAJ-OLD
+
+# KaoBox Test Protocol
+
+A version can be validated only if all checks pass.
+
+---
+
+## Core Validation
+
+- env.sh loads without error
+- sanity.sh returns success
+- logger.sh initializes properly
+
+---
+
+## CLI Validation
+
+- brain --help executes
+- brain exits cleanly
+- No uncaught errors
+
+---
+
+## Module Validation
+
+- modules load without breaking core
+- memory module initializes safely
+
+---
+
+## State Validation
+
+- golden.version matches runtime
+- state directory writable
+- no forbidden file mutation
+
+---
+
+## Validation Result
+
+All checks must pass before:
+
+- Phase closure
+- Version bump
+
+############################################################
+### FILE: ./init.sh
+############################################################
+# LANCHER-INIT
+
+#!/usr/bin/env bash
+
+KAOBOX_DIR="/opt/kaobox"
+
+# Load i18n first
+source "$KAOBOX_DIR/core/i18n.sh"
+
+# Launch core init
+exec "$KAOBOX_DIR/core/init.sh"
+
+############################################################
+### FILE: ./lang/en.sh
+############################################################
+WELCOME_TITLE="Welcome to KAOBOX"
+NO_PROFILE="No profile detected."
+CREATE_PROFILE="Create new profile"
+EXIT="Exit"
+
+EXISTING_PROFILES="Existing profiles detected:"
+PROFILE_CREATED="Profile created successfully."
+EXITING="Exiting."
+
+############################################################
+### FILE: ./lang/fr.sh
+############################################################
+WELCOME_TITLE="Bienvenue dans KAOBOX"
+NO_PROFILE="Aucun profil détecté."
+CREATE_PROFILE="Créer un nouveau profil"
+EXIT="Quitter"
+
+EXISTING_PROFILES="Profils existants détectés :"
+PROFILE_CREATED="Profil créé avec succès."
+EXITING="Fermeture."
+
+############################################################
+### FILE: ./lib/brain/commands/doctor.sh
+############################################################
+cmd_doctor() {
+
+    echo "[Brain] Running diagnostics..."
+
+    # ----------------------------------
+    # Check database file
+    # ----------------------------------
+
+    if [[ ! -f "$BRAIN_DB" ]]; then
+        echo "❌ Database missing: $BRAIN_DB"
+        return 1
+    fi
+
+    if [[ ! -d "$NOTES_DIR" ]]; then
+        echo "❌ Notes directory missing: $NOTES_DIR"
+        return 1
+    fi
+
+    # ----------------------------------
+    # Check tables existence
+    # ----------------------------------
+
+    tables=$(sqlite3 "$BRAIN_DB" \
+        "SELECT name FROM sqlite_master WHERE type='table';")
+
+    for t in notes tags note_tags notes_fts; do
+        if ! echo "$tables" | grep -qx "$t"; then
+            echo "❌ Table '$t' missing"
+            return 1
+        fi
+    done
+
+    # ----------------------------------
+    # Integrity check
+    # ----------------------------------
+
+    integrity=$(sqlite3 "$BRAIN_DB" "PRAGMA integrity_check;")
+
+    if [[ "$integrity" != "ok" ]]; then
+        echo "❌ Database integrity check failed:"
+        echo "$integrity"
+        return 1
+    fi
+
+    echo "🧠 Brain status: HEALTHY"
+    return 0
+}
+
+############################################################
+### FILE: ./lib/brain/commands/fuzzy.sh
+############################################################
+cmd_fuzzy() {
+
+    [[ -n "${BRAIN_DB:-}" ]] || {
+        echo "[ERROR] BRAIN_DB not defined"
+        return 1
+    }
+
+    command -v fzf >/dev/null 2>&1 || {
+        echo "[ERROR] fzf not installed"
+        return 1
+    }
+
+    local selected
+    selected=$(
+        sqlite3 -separator "|" "$BRAIN_DB" "
+        SELECT n.id,
+               n.title,
+               n.updated_at,
+               IFNULL((
+                   SELECT GROUP_CONCAT('#' || t2.name, ' ')
+                   FROM (
+                       SELECT t2.name
+                       FROM note_tags nt2
+                       JOIN tags t2 ON t2.id = nt2.tag_id
+                       WHERE nt2.note_id = n.id
+                       ORDER BY t2.name
+                   )
+               ), '')
+        FROM notes n
+        ORDER BY n.updated_at DESC;
+        " | while IFS="|" read -r id title date tags; do
+            printf "%s|%-30s | %s | %s\n" "$id" "$title" "$date" "$tags"
+        done | fzf \
+            --delimiter="|" \
+            --layout=reverse \
+            --height=90% \
+            --border \
+            --prompt="🧠 Brain > "
+    )
+
+    [[ -z "$selected" ]] && return 0
+
+    local note_id
+    note_id=$(echo "$selected" | cut -d'|' -f1)
+
+    # Validate numeric id
+    [[ "$note_id" =~ ^[0-9]+$ ]] || {
+        echo "[ERROR] Invalid selection"
+        return 1
+    }
+
+    local filepath
+    filepath=$(sqlite3 "$BRAIN_DB" "
+        SELECT path FROM notes WHERE id=$note_id LIMIT 1;
+    ")
+
+    if [[ -z "$filepath" || ! -f "$filepath" ]]; then
+        echo "[ERROR] File missing on disk."
+        return 1
+    fi
+
+    "${EDITOR:-micro}" "$filepath"
+}
+
+############################################################
+### FILE: ./lib/brain/commands/ls.sh
+############################################################
+cmd_ls() {
+
+    [[ -n "${BRAIN_DB:-}" ]] || {
+        echo "[ERROR] BRAIN_DB not defined"
+        return 1
+    }
+
+    local query
+    query="
+        SELECT n.id,
+               n.title,
+               n.updated_at,
+               IFNULL((
+                   SELECT GROUP_CONCAT(name, ',')
+                   FROM (
+                       SELECT t2.name
+                       FROM note_tags nt2
+                       JOIN tags t2 ON t2.id = nt2.tag_id
+                       WHERE nt2.note_id = n.id
+                       ORDER BY t2.name
+                   )
+               ), '')
+        FROM notes n
+        ORDER BY n.updated_at DESC;
+    "
+
+    local count=0
+
+    while IFS=$'\t' read -r id title date tags; do
+        count=$((count+1))
+        printf "\n%s\n" "$title"
+        printf "Date: %s\n" "$date"
+        [[ -n "$tags" ]] && printf "Tags: %s\n" "$tags"
+        printf "%s\n" "----------------------------------------"
+    done < <(
+        sqlite3 -separator $'\t' "$BRAIN_DB" "$query"
+    )
+
+    if [[ $count -eq 0 ]]; then
+        echo "[Brain] No notes indexed."
+    fi
+}
+
+############################################################
+### FILE: ./lib/brain/commands/new.sh
+############################################################
+cmd_new() {
+
+    [[ -n "${NOTES_DIR:-}" ]] || {
+        echo "[ERROR] NOTES_DIR not defined"
+        return 1
+    }
+
+    if [[ $# -lt 1 ]]; then
+        usage
+        return 1
+    fi
+
+    local title="$1"
+
+    # Generate slug
+    local slug
+    slug=$(printf "%s" "$title" \
+        | tr '[:upper:]' '[:lower:]' \
+        | tr ' ' '-' \
+        | tr -cd 'a-z0-9-_')
+
+    if [[ -z "$slug" ]]; then
+        echo "[ERROR] Invalid title"
+        return 1
+    fi
+
+    local filepath="$NOTES_DIR/$slug.md"
+
+    # Avoid overwrite
+    if [[ -f "$filepath" ]]; then
+        echo "[ERROR] Note already exists: $filepath"
+        return 1
+    fi
+
+    cat > "$filepath" <<EOF
+# $title
+
+Tags: #
+
+Résumé:
+
+---
+
+EOF
+
+    # Use internal index function (modular architecture)
+    index_note "$filepath"
+
+    log "New note created: $filepath"
+
+    "${EDITOR:-micro}" "$filepath"
+}
+
+############################################################
+### FILE: ./lib/brain/commands/open.sh
+############################################################
+cmd_open() {
+
+    [[ -n "${BRAIN_DB:-}" ]] || {
+        echo "[ERROR] BRAIN_DB not defined"
+        return 1
+    }
+
+    if [[ $# -lt 1 ]]; then
+        usage
+        return 1
+    fi
+
+    local raw_filename="$1"
+
+    # Escape single quotes safely
+    local filename_safe
+    filename_safe="$(printf "%s" "$raw_filename" | sed "s/'/''/g")"
+
+    local query="
+        SELECT path
+        FROM notes
+        WHERE path LIKE '%' || '$filename_safe' || '%'
+        ORDER BY updated_at DESC
+        LIMIT 1;
+    "
+
+    local filepath
+    filepath=$(sqlite3 "$BRAIN_DB" "$query")
+
+    if [[ -z "$filepath" ]]; then
+        echo "Note not found."
+        return 1
+    fi
+
+    if [[ ! -f "$filepath" ]]; then
+        echo "File missing on disk: $filepath"
+        return 1
+    fi
+
+    "${EDITOR:-micro}" "$filepath"
+}
+
+############################################################
+### FILE: ./lib/brain/commands/reindex.sh
+############################################################
+#!/usr/bin/env bash
+
+# ==========================================
+# KAOBOX BRAIN — REINDEX COMMAND
+# Batch rebuild (single transaction)
+# ==========================================
+
+set -euo pipefail
+
+
+#!/usr/bin/env bash
+# ------------------------------------------
+# Security — Absolute path guard
+# ------------------------------------------
+
+_check_absolute_path() {
+    local path="$1"
+    [[ "$path" == /* ]] || {
+        echo "[ERROR] Absolute path required: $path"
+        return 1
+    }
+}
+
+# ------------------------------------------
+# Command implementation
+# ------------------------------------------
+
+cmd_reindex() {
+
+    [[ -n "${NOTES_DIR:-}" ]] || {
+        echo "[ERROR] NOTES_DIR not defined"
+        return 1
+    }
+
+    _check_absolute_path "$NOTES_DIR" || return 1
+
+    if [[ ! -d "$NOTES_DIR" ]]; then
+        echo "[ERROR] Notes directory missing: $NOTES_DIR"
+        return 1
+    fi
+
+    echo "[Brain] Reindexing all notes..."
+
+    mapfile -d '' files < <(
+        find "$NOTES_DIR" -type f -name "*.md" -print0 | sort -z
+    )
+
+    if [[ ${#files[@]} -eq 0 ]]; then
+        echo "[Brain] No notes found."
+        return 0
+    fi
+
+    reindex_all "${files[@]}"
+
+    echo "[Brain] Reindex complete."
+    echo "[Brain] Files processed: ${#files[@]}"
+}
+
+############################################################
+### FILE: ./lib/brain/commands/search.sh
+############################################################
+cmd_search() {
+
+    [[ -n "${BRAIN_DB:-}" ]] || {
+        echo "[ERROR] BRAIN_DB not defined"
+        return 1
+    }
+
+    if [[ $# -lt 1 ]]; then
+        usage
+        return 1
+    fi
+
+    local raw_query="$1"
+    log "Search query: $raw_query"
+
+    # ---------------------------------
+    # TAG SEARCH
+    # ---------------------------------
+
+    if [[ "$raw_query" == tag:* ]]; then
+        local raw_tag="${raw_query#tag:}"
+        local tag_safe
+        tag_safe="$(printf "%s" "$raw_tag" | sed "s/'/''/g")"
+
+        if [[ -z "$tag_safe" ]]; then
+            echo "Empty tag."
+            return 1
+        fi
+
+        local count=0
+
+        while IFS=$'\t' read -r id title; do
+            count=$((count+1))
+            printf "%s\n" "$title"
+        done < <(
+            sqlite3 -separator $'\t' "$BRAIN_DB" "
+            SELECT notes.id, notes.title
+            FROM notes
+            JOIN note_tags ON notes.id = note_tags.note_id
+            JOIN tags ON tags.id = note_tags.tag_id
+            WHERE tags.name = '$tag_safe'
+            ORDER BY notes.updated_at DESC;
+            "
+        )
+
+        [[ $count -eq 0 ]] && echo "No notes found for tag: $raw_tag"
+        return 0
+    fi
+
+    # ---------------------------------
+    # FTS SEARCH
+    # ---------------------------------
+
+    local fts_safe
+    fts_safe="$(printf "%s" "$raw_query" | sed "s/'/''/g")"
+
+    if [[ -z "$fts_safe" ]]; then
+        echo "Invalid search query."
+        return 1
+    fi
+
+    local count=0
+
+    while IFS=$'\t' read -r id title; do
+        count=$((count+1))
+        printf "%s\n" "$title"
+    done < <(
+        sqlite3 -separator $'\t' "$BRAIN_DB" "
+        SELECT rowid, title
+        FROM notes_fts
+        WHERE notes_fts MATCH '$fts_safe'
+        ORDER BY bm25(notes_fts);
+        "
+    )
+
+    [[ $count -eq 0 ]] && echo "No results found."
+}
+
+############################################################
+### FILE: ./lib/brain/dispatcher.sh
+############################################################
+usage() {
+    echo "Usage:"
+    echo "  brain new \"Title\""
+    echo "  brain search <query>"
+    echo "  brain search tag:<tag>"
+    echo "  brain open <filename>"
+    echo "  brain ls"
+    echo "  brain reindex"
+    echo "  brain doctor"
+    exit 0
+}
+
+dispatch() {
+    local cmd="${1:-}"
+
+    if [[ -z "$cmd" ]]; then
+        cmd_fuzzy
+        return
+    fi
+
+    case "$cmd" in
+        search) shift; cmd_search "$@" ;;
+        new) shift; cmd_new "$@" ;;
+        open) shift; cmd_open "$@" ;;
+        ls) cmd_ls ;;
+        doctor) cmd_doctor ;;
+        reindex) cmd_reindex ;;
+        help) usage ;;
+        *) cmd_search "$cmd" ;;
+    esac
+}
+
+############################################################
+### FILE: ./lib/brain/env.sh
+############################################################
+#!/usr/bin/env bash
+
+# ---------------------------------------------
+# KaoBox Brain Environment Configuration
+# ---------------------------------------------
+
+# Base paths
+readonly BRAIN_ROOT="/data/brain"
+readonly MODULES_ROOT="/opt/kaobox/modules"
+
+# Derived paths
+readonly BRAIN_DB="$BRAIN_ROOT/.index/brain.db"
+readonly NOTES_DIR="$BRAIN_ROOT/notes"
+readonly INDEX_SCRIPT="$MODULES_ROOT/memory/index.sh"
+
+# ---------------------------------------------
+# Safety checks
+# ---------------------------------------------
+
+_check_absolute() {
+    [[ "$1" == /* ]] || {
+        echo "[ENV ERROR] Path must be absolute: $1"
+        return 1
+    }
+}
+
+_check_absolute "$BRAIN_ROOT"
+_check_absolute "$MODULES_ROOT"
+_check_absolute "$NOTES_DIR"
+_check_absolute "$BRAIN_DB"
+
+# ---------------------------------------------
+# Ensure required directories exist
+# ---------------------------------------------
+
+mkdir -p "$BRAIN_ROOT/.index"
+mkdir -p "$NOTES_DIR"
+
+# ---------------------------------------------
+# Ensure DB exists
+# ---------------------------------------------
+
+if [[ ! -f "$BRAIN_DB" ]]; then
+    echo "[Brain] Initializing database..."
+    sqlite3 "$BRAIN_DB" < "$MODULES_ROOT/memory/schema.sql"
+fi
+
+############################################################
+### FILE: ./lib/brain/lock.sh
+############################################################
+#!/usr/bin/env bash
+
+readonly LOCK_DIR="/data/brain/.lock"
+readonly LOCK_FILE="$LOCK_DIR/brain.lock"
+
+mkdir -p "$LOCK_DIR" 2>/dev/null || true
+
+acquire_lock() {
+
+    exec 200>"$LOCK_FILE" || {
+        echo "[Brain] Unable to open lock file."
+        return 1
+    }
+
+    flock -n 200 || {
+        echo "[Brain] Another process is running. Aborting."
+        return 1
+    }
+}
+
+release_lock() {
+    flock -u 200 2>/dev/null || true
+    exec 200>&- 2>/dev/null || true
+}
+
+############################################################
+### FILE: ./lib/brain/logger.sh
+############################################################
+#!/usr/bin/env bash
+
+readonly LOG_DIR="/var/log/kaobox"
+readonly LOG_FILE="$LOG_DIR/brain.log"
+
+# Ensure log directory exists
+mkdir -p "$LOG_DIR" 2>/dev/null || true
+
+log() {
+    local level="${1:-INFO}"
+    shift || true
+    local message="$*"
+    local timestamp
+    timestamp="$(date '+%Y-%m-%d %H:%M:%S')"
+
+    {
+        flock 200
+        printf "%s | %-5s | %s\n" "$timestamp" "$level" "$message"
+    } 200>>"$LOG_FILE"
+}
+
+############################################################
+### FILE: ./lib/brain/preflight.sh
+############################################################
+preflight_check() {
+    if [ ! -f "$BRAIN_DB" ]; then
+        echo "Brain database not found at $BRAIN_DB"
+        exit 1
+    fi
+}
+
+############################################################
+### FILE: ./lib/brain/sanitize.sh
+############################################################
+sanitize_sql() {
+    printf "%s" "$1" | sed "s/'/''/g"
+}
+
+sanitize_fts() {
+    echo "$1" \
+    | sed "s/['\";()]//g" \
+    | sed "s/--//g" \
+    | sed "s/[^a-zA-Z0-9_ ]//g"
+}
+
+############################################################
+### FILE: ./modules/memory/engine/fts.sh
+############################################################
+
+############################################################
+### FILE: ./modules/memory/engine/links.sh
+############################################################
+cat <<'EOF' > /opt/kaobox/modules/memory/links.sh
+#!/usr/bin/env bash
+set -euo pipefail
+
+# ==========================================================
+# KAOBOX - Semantic Link Graph Engine
+# ----------------------------------------------------------
+# Responsibilities:
+#   - Extract [[Note Title]] patterns
+#   - Sync links table
+#   - Maintain source → target relations
+#
+# Phase 4 - Graph Layer
+# ==========================================================
+
+# ----------------------------------------------------------
+# Extract [[Links]] from markdown
+# ----------------------------------------------------------
+
+extract_links() {
+    local file="$1"
+
+    grep -o '\[\[[^]]\+\]\]' "$file" 2>/dev/null \
+        | sed 's/\[\[//;s/\]\]//' \
+        | sort -u || true
+}
+
+# ----------------------------------------------------------
+# Build SQL for link sync
+# ----------------------------------------------------------
+
+links_sql() {
+    local file="$1"
+    local safe_file
+    safe_file=$(sql_escape "$file")
+
+    # Clean previous links for this source
+cat <<SQL
+DELETE FROM links
+WHERE source_id = (SELECT id FROM notes WHERE path='$safe_file');
+SQL
+
+    local links
+    links=$(extract_links "$file")
+
+    for target_title in $links; do
+        local safe_title
+        safe_title=$(sql_escape "$target_title")
+
+cat <<SQL
+INSERT INTO links(source_id, target_id)
+SELECT s.id, t.id
+FROM notes s
+JOIN notes t ON t.title='$safe_title'
+WHERE s.path='$safe_file'
+ON CONFLICT(source_id, target_id) DO NOTHING;
+SQL
+    done
+}
+
+# ----------------------------------------------------------
+# TODO:
+# - Handle alias syntax [[Note|Alias]]
+# - Handle case-insensitive resolution
+# - Handle unresolved links tracking
+# ----------------------------------------------------------
+
+EOF
+
+############################################################
+### FILE: ./modules/memory/engine/metadata.sh
+############################################################
+
+############################################################
+### FILE: ./modules/memory/engine/tags.sh
+############################################################
+
+############################################################
+### FILE: ./modules/memory/engine/tx.sh
+############################################################
+
+############################################################
+### FILE: ./modules/memory/engine/utils.sh
+############################################################
+
+############################################################
+### FILE: ./modules/memory/gc.sh
+############################################################
+
+############################################################
+### FILE: ./modules/memory/index.sh
+############################################################
+#!/usr/bin/env bash
+set -euo pipefail
+
+# ==========================================================
+# KAOBOX - Brain Memory Indexer (v2.1 Graph Ready)
+# ----------------------------------------------------------
+# Responsibilities:
+#   - Sync filesystem note → DB (metadata)
+#   - Maintain FTS rowid binding
+#   - Extract & sync semantic tags
+#   - Extract & sync [[Links]] graph
+#   - Garbage collect deleted notes
+#   - Ensure atomic consistency
+#
+# Layers:
+#   L1 → Metadata
+#   L2 → FTS
+#   L3 → Tags
+#   L4 → Links (Graph)
+# ==========================================================
+
+[[ -n "${BRAIN_DB:-}" ]] || {
+    echo "[Memory] BRAIN_DB not defined"
+    return 1
+}
+
+# ==========================================================
+# UTILITIES
+# ==========================================================
+
+_sql_escape() {
+    printf "%s" "$1" | sed "s/'/''/g"
+}
+
+_get_file_metadata() {
+    local file="$1"
+    local hash mtime size
+
+    hash=$(sha256sum "$file" | awk '{print $1}')
+    mtime=$(stat -c %Y "$file")
+    size=$(stat -c %s "$file")
+
+    echo "$hash|$mtime|$size"
+}
+
+_should_reindex() {
+    local file="$1"
+    local safe_file
+    safe_file="$(_sql_escape "$file")"
+
+    local row
+    row=$(sqlite3 "$BRAIN_DB" \
+        "SELECT content_hash, file_mtime, file_size
+         FROM notes WHERE path='$safe_file';" || true)
+
+    [[ -z "$row" ]] && return 0
+
+    local new_meta
+    new_meta=$(_get_file_metadata "$file")
+
+    local new_hash new_mtime new_size
+    IFS="|" read -r new_hash new_mtime new_size <<< "$new_meta"
+
+    local old_hash old_mtime old_size
+    IFS="|" read -r old_hash old_mtime old_size <<< "$row"
+
+    [[ "$new_hash" == "$old_hash" &&
+       "$new_mtime" == "$old_mtime" &&
+       "$new_size" == "$old_size" ]] && return 1
+
+    return 0
+}
+
+# ==========================================================
+# TAG EXTRACTION
+# ==========================================================
+
+_extract_tags() {
+    local file="$1"
+
+    grep -i '^Tags:' "$file" 2>/dev/null \
+        | sed 's/^Tags:[[:space:]]*//' \
+        | grep -o '#[a-zA-Z0-9_-]\+' \
+        | sed 's/#//' \
+        | sort -u || true
+}
+
+# ==========================================================
+# LINK EXTRACTION (Phase 4)
+# ==========================================================
+
+_extract_links() {
+    local file="$1"
+
+    grep -o '\[\[[^]]\+\]\]' "$file" 2>/dev/null \
+        | sed 's/\[\[//;s/\]\]//' \
+        | sort -u || true
+}
+
+# ==========================================================
+# CORE SQL BUILDER
+# ==========================================================
+
+_build_index_sql() {
+    local file="$1"
+
+    local meta hash mtime size
+    meta=$(_get_file_metadata "$file")
+    IFS="|" read -r hash mtime size <<< "$meta"
+
+    local title safe_file safe_hash content
+    title="$(_sql_escape "$(basename "$file")")"
+    safe_file="$(_sql_escape "$file")"
+    safe_hash="$(_sql_escape "$hash")"
+    content="$(_sql_escape "$(cat "$file")")"
+
+cat <<SQL
+
+-- =====================================================
+-- METADATA UPSERT
+-- =====================================================
+INSERT INTO notes (title, path, updated_at, content_hash, file_mtime, file_size)
+VALUES ('$title', '$safe_file', datetime('now'),
+        '$safe_hash', $mtime, $size)
+ON CONFLICT(path) DO UPDATE SET
+  title=excluded.title,
+  updated_at=datetime('now'),
+  content_hash=excluded.content_hash,
+  file_mtime=excluded.file_mtime,
+  file_size=excluded.file_size;
+
+-- =====================================================
+-- CLEAN PREVIOUS STATE
+-- =====================================================
+DELETE FROM note_tags
+WHERE note_id = (
+    SELECT id FROM notes WHERE path='$safe_file'
+);
+
+DELETE FROM links
+WHERE source_id = (
+    SELECT id FROM notes WHERE path='$safe_file'
+);
+
+DELETE FROM notes_fts
+WHERE rowid = (
+    SELECT id FROM notes WHERE path='$safe_file'
+);
+
+-- =====================================================
+-- FTS SYNC
+-- =====================================================
+INSERT INTO notes_fts (rowid, title, content)
+SELECT id, '$title', '$content'
+FROM notes
+WHERE path='$safe_file';
+SQL
+
+    # -----------------------------------------------------
+    # TAG SYNC
+    # -----------------------------------------------------
+
+    local tags
+    tags=$(_extract_tags "$file")
+
+    for tag in $tags; do
+        local safe_tag
+        safe_tag="$(_sql_escape "$tag")"
+
+cat <<SQL
+INSERT INTO tags(name)
+VALUES ('$safe_tag')
+ON CONFLICT(name) DO NOTHING;
+
+INSERT INTO note_tags(note_id, tag_id)
+SELECT n.id, t.id
+FROM notes n
+JOIN tags t ON t.name='$safe_tag'
+WHERE n.path='$safe_file'
+ON CONFLICT(note_id, tag_id) DO NOTHING;
+SQL
+    done
+
+    # -----------------------------------------------------
+    # LINK SYNC (Graph Layer)
+    # -----------------------------------------------------
+
+    local links
+    links=$(_extract_links "$file")
+
+    for link in $links; do
+        local safe_link
+        safe_link="$(_sql_escape "$link")"
+
+cat <<SQL
+INSERT INTO links(source_id, target_id)
+SELECT s.id, t.id
+FROM notes s
+JOIN notes t ON t.title='$safe_link'
+WHERE s.path='$safe_file'
+ON CONFLICT(source_id, target_id) DO NOTHING;
+SQL
+    done
+}
+
+# ==========================================================
+# PUBLIC API
+# ==========================================================
+
+index_note() {
+    local file="$1"
+
+    [[ "$file" == /* ]] || {
+        echo "[ERROR] Absolute path required: $file"
+        return 1
+    }
+
+    [[ -f "$file" ]] || {
+        echo "[ERROR] File not found: $file"
+        return 1
+    }
+
+    if ! _should_reindex "$file"; then
+        log INFO "Skipped (unchanged): $file"
+        return 0
+    fi
+
+    {
+        echo "PRAGMA foreign_keys=ON;"
+        echo "PRAGMA busy_timeout=5000;"
+        echo "BEGIN IMMEDIATE;"
+        _build_index_sql "$file"
+        echo "COMMIT;"
+    } | sqlite3 "$BRAIN_DB"
+
+    log INFO "Indexed (semantic+graph): $file"
+}
+
+# ==========================================================
+# GARBAGE COLLECTOR
+# ==========================================================
+
+garbage_collect() {
+
+    sqlite3 "$BRAIN_DB" "SELECT path FROM notes;" | while read -r path; do
+        [[ -f "$path" ]] && continue
+
+        local safe_path
+        safe_path="$(_sql_escape "$path")"
+
+        {
+            echo "BEGIN IMMEDIATE;"
+            echo "DELETE FROM notes WHERE path='$safe_path';"
+            echo "COMMIT;"
+        } | sqlite3 "$BRAIN_DB"
+
+        log INFO "Removed missing note: $path"
+    done
+
+    sqlite3 "$BRAIN_DB" \
+        "DELETE FROM tags WHERE id NOT IN (SELECT tag_id FROM note_tags);"
+
+    log INFO "Garbage collection completed"
+}
+
+reindex_all() {
+    local files=("$@")
+    [[ ${#files[@]} -eq 0 ]] && return 0
+
+    {
+        echo "PRAGMA foreign_keys=ON;"
+        echo "PRAGMA busy_timeout=5000;"
+        echo "BEGIN IMMEDIATE;"
+        for f in "${files[@]}"; do
+            _build_index_sql "$f"
+        done
+        echo "COMMIT;"
+    } | sqlite3 "$BRAIN_DB"
+
+    log INFO "Batch reindex completed (${#files[@]} files)"
+}
+
+############################################################
+### FILE: ./modules/memory/init.sh
+############################################################
+#!/usr/bin/env bash
+set -euo pipefail
+
+# =========================================================
+# KAOBOX MEMORY MODULE
+# File: init.sh
+# Purpose: Initialize Brain structure (Markdown + SQLite)
+#
+# Responsibilities:
+#   - Create brain directory layout
+#   - Initialize SQLite database schema
+#   - Ensure idempotent migrations
+#   - Prepare FTS + Semantic graph layers
+#
+# Version: Brain v2 Semantic Ready
+# =========================================================
+
+# ---------------------------------------------------------
+# PATHS
+# ---------------------------------------------------------
+
+KX_DATA="/data"
+KX_BRAIN="$KX_DATA/brain"
+KX_INDEX="$KX_BRAIN/.index"
+KX_DB="$KX_INDEX/brain.db"
+
+export BRAIN_DB="$KX_DB"
+
+# ---------------------------------------------------------
+# DIRECTORY STRUCTURE
+# ---------------------------------------------------------
+
+echo "[Memory] Ensuring brain directory structure..."
+
+mkdir -p "$KX_BRAIN/inbox"
+mkdir -p "$KX_BRAIN/notes"
+mkdir -p "$KX_BRAIN/projects"
+mkdir -p "$KX_BRAIN/archive"
+mkdir -p "$KX_INDEX"
+
+# TODO:
+# - Multi-brain instances support
+# - Brain profile isolation
+# - Snapshot directory
+
+# ---------------------------------------------------------
+# SQLITE INITIALIZATION
+# ---------------------------------------------------------
+
+if [ ! -f "$KX_DB" ]; then
+    echo "[Memory] Creating SQLite database..."
+
+    sqlite3 "$KX_DB" <<'SQL'
+
+PRAGMA foreign_keys=ON;
+
+-- =====================================================
+-- CORE NOTES TABLE
+-- =====================================================
+
+CREATE TABLE notes (
+    id INTEGER PRIMARY KEY,
+    path TEXT UNIQUE NOT NULL,
+    title TEXT,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT,
+    content_hash TEXT,
+    file_mtime INTEGER,
+    file_size INTEGER
+);
+
+CREATE INDEX idx_notes_path ON notes(path);
+CREATE INDEX idx_notes_title ON notes(title);
+
+-- =====================================================
+-- FTS5 VIRTUAL TABLE (Rowid Binding)
+-- =====================================================
+
+CREATE VIRTUAL TABLE notes_fts USING fts5(
+    title,
+    content
+);
+
+-- =====================================================
+-- TAGS (Semantic Layer)
+-- =====================================================
+
+CREATE TABLE tags (
+    id INTEGER PRIMARY KEY,
+    name TEXT UNIQUE NOT NULL
+);
+
+CREATE TABLE note_tags (
+    note_id INTEGER NOT NULL,
+    tag_id INTEGER NOT NULL,
+    PRIMARY KEY (note_id, tag_id),
+    FOREIGN KEY (note_id) REFERENCES notes(id) ON DELETE CASCADE,
+    FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_tags_name ON tags(name);
+CREATE INDEX idx_note_tags_note ON note_tags(note_id);
+CREATE INDEX idx_note_tags_tag ON note_tags(tag_id);
+
+-- =====================================================
+-- LINKS (Graph Layer - Phase 4)
+-- =====================================================
+
+CREATE TABLE links (
+    source_id INTEGER NOT NULL,
+    target_id INTEGER NOT NULL,
+    PRIMARY KEY (source_id, target_id),
+    FOREIGN KEY (source_id) REFERENCES notes(id) ON DELETE CASCADE,
+    FOREIGN KEY (target_id) REFERENCES notes(id) ON DELETE CASCADE
+);
+
+CREATE INDEX idx_links_source ON links(source_id);
+CREATE INDEX idx_links_target ON links(target_id);
+
+SQL
+
+    echo "[Memory] SQLite schema created."
+
+else
+    echo "[Memory] Database already exists."
+    echo "[Memory] Running safe migrations..."
+
+    sqlite3 "$KX_DB" <<'SQL'
+
+PRAGMA foreign_keys=ON;
+
+-- Safe migrations (idempotent)
+
+CREATE TABLE IF NOT EXISTS tags (
+    id INTEGER PRIMARY KEY,
+    name TEXT UNIQUE NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS note_tags (
+    note_id INTEGER NOT NULL,
+    tag_id INTEGER NOT NULL,
+    PRIMARY KEY (note_id, tag_id)
+);
+
+CREATE TABLE IF NOT EXISTS links (
+    source_id INTEGER NOT NULL,
+    target_id INTEGER NOT NULL,
+    PRIMARY KEY (source_id, target_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_tags_name ON tags(name);
+CREATE INDEX IF NOT EXISTS idx_links_source ON links(source_id);
+CREATE INDEX IF NOT EXISTS idx_links_target ON links(target_id);
+
+SQL
+
+    echo "[Memory] Migration check complete."
+fi
+
+echo "[Memory] Initialization complete."
+
+############################################################
+### FILE: ./state/PHASE_HISTORY.md
+############################################################
+## Phase History
+
+### Phase 1 — Architecture Freeze (2026-03-02)
+- Core and Module separation finalized
+- System layer definitions confirmed
+
+############################################################
+### FILE: ./tests/test_brain.py
+############################################################
+import unittest
+
+class TestBrainModule(unittest.TestCase):
+    def test_brain_function(self):
+        # Simuler un test pour une fonction du module Brain
+        self.assertEqual(1 + 1, 2)
+
+if __name__ == '__main__':
+    unittest.main()
+
+############################################################
+### FILE: ./tests/test_memory_index.sh
+############################################################
+#!/usr/bin/env bash
+
+# ==========================================
+# KAOBOX MEMORY MODULE TEST
+# Tests index.sh transactional behavior
+# ==========================================
+
+set -e
+
+BRAIN_DB="/data/brain/.index/brain.db"
+TEST_FILE="/data/brain/notes/__test_memory__.md"
+
+echo "[TEST] Starting memory index test"
+
+# ------------------------------------------
+# Create test note
+# ------------------------------------------
+
+cat <<EOF > "$TEST_FILE"
+# Test Memory Module
+
+Tags: #alpha #beta
+
+This is a test note for index validation.
+EOF
+
+echo "[TEST] Test file created"
+
+# ------------------------------------------
+# Run index
+# ------------------------------------------
+
+/opt/kaobox/modules/memory/index.sh index "$TEST_FILE"
+
+echo "[TEST] Index executed"
+
+# ------------------------------------------
+# Validate note insertion
+# ------------------------------------------
+
+NOTE_EXISTS=$(sqlite3 "$BRAIN_DB" \
+"SELECT COUNT(*) FROM notes WHERE path='$TEST_FILE';")
+
+if [ "$NOTE_EXISTS" != "1" ]; then
+  echo "[FAIL] Note not inserted correctly"
+  exit 1
+fi
+
+echo "[PASS] Note inserted"
+
+# ------------------------------------------
+# Validate tags
+# ------------------------------------------
+
+TAG_COUNT=$(sqlite3 "$BRAIN_DB" "
+SELECT COUNT(*) 
+FROM tags t
+JOIN note_tags nt ON t.id = nt.tag_id
+JOIN notes n ON nt.note_id = n.id
+WHERE n.path='$TEST_FILE';
+")
+
+if [ "$TAG_COUNT" != "2" ]; then
+  echo "[FAIL] Tags not linked correctly"
+  exit 1
+fi
+
+echo "[PASS] Tags linked"
+
+# ------------------------------------------
+# Cleanup
+# ------------------------------------------
+
+sqlite3 "$BRAIN_DB" "DELETE FROM notes WHERE path='$TEST_FILE';"
+rm -f "$TEST_FILE"
+
+echo "[TEST] Cleanup done"
+echo "[SUCCESS] Memory index test completed"
+
+############################################################
+### FILE: ./tests/test_reindex.sh
+############################################################
+#!/usr/bin/env bash
+
+# ==========================================
+# KAOBOX MEMORY MODULE REINDEX TEST
+# Test reindex functionality
+# ==========================================
+
+set -e
+
+BRAIN_DB="/data/brain/.index/brain.db"
+TEST_FILE="/data/brain/notes/__test_reindex__.md"
+
+echo "[TEST] Starting reindex test"
+
+# ------------------------------------------
+# Create test note
+# ------------------------------------------
+
+cat <<EOF > "$TEST_FILE"
+# Test Reindex Module
+
+Tags: #alpha #reindex
+
+This is a test note to validate reindex functionality.
+EOF
+
+echo "[TEST] Test file created"
+
+# ------------------------------------------
+# Run index for the new note
+# ------------------------------------------
+
+/opt/kaobox/modules/memory/index.sh index "$TEST_FILE"
+
+echo "[TEST] Index executed for new note"
+
+# ------------------------------------------
+# Check if note is indexed
+# ------------------------------------------
+
+NOTE_EXISTS=$(sqlite3 "$BRAIN_DB" \
+"SELECT COUNT(*) FROM notes WHERE path='$TEST_FILE';")
+
+if [ "$NOTE_EXISTS" != "1" ]; then
+  echo "[FAIL] Note not indexed correctly"
+  exit 1
+fi
+
+echo "[PASS] Note indexed"
+
+# ------------------------------------------
+# Run reindexing for all notes
+# ------------------------------------------
+
+echo "[TEST] Running reindex"
+
+/opt/kaobox/bin/brain reindex
+
+echo "[TEST] Reindex executed"
+
+# ------------------------------------------
+# Validate note is still indexed after reindex
+# ------------------------------------------
+
+NOTE_EXISTS_AFTER_REINDEX=$(sqlite3 "$BRAIN_DB" \
+"SELECT COUNT(*) FROM notes WHERE path='$TEST_FILE';")
+
+if [ "$NOTE_EXISTS_AFTER_REINDEX" != "1" ]; then
+  echo "[FAIL] Note not found after reindex"
+  exit 1
+fi
+
+echo "[PASS] Note still indexed after reindex"
+
+# ------------------------------------------
+# Validate tags are still present after reindex
+# ------------------------------------------
+
+TAG_COUNT_AFTER_REINDEX=$(sqlite3 "$BRAIN_DB" "
+SELECT COUNT(*) 
+FROM tags t
+JOIN note_tags nt ON t.id = nt.tag_id
+JOIN notes n ON nt.note_id = n.id
+WHERE n.path='$TEST_FILE';
+")
+
+if [ "$TAG_COUNT_AFTER_REINDEX" != "2" ]; then
+  echo "[FAIL] Tags not linked after reindex"
+  exit 1
+fi
+
+echo "[PASS] Tags linked after reindex"
+
+# ------------------------------------------
+# Cleanup
+# ------------------------------------------
+
+sqlite3 "$BRAIN_DB" "DELETE FROM notes WHERE path='$TEST_FILE';"
+rm -f "$TEST_FILE"
+
+echo "[TEST] Cleanup done"
+echo "[SUCCESS] Reindex test completed"

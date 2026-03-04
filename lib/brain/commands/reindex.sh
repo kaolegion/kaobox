@@ -50,7 +50,14 @@ cmd_reindex() {
         return 0
     fi
 
+    acquire_lock || {
+      echo "❌ Could not acquire lock"
+      return 1
+    }
+    
     reindex_all "${files[@]}"
+    
+    release_lock
 
     echo "[Brain] Reindex complete."
     echo "[Brain] Files processed: ${#files[@]}"
