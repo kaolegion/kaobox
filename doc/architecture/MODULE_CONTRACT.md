@@ -1,57 +1,107 @@
-## Module Communication Contract
-
-- **Core** is responsible for:
-  - Logging
-  - Environment setup
-  - Basic utilities
-  
-- **Modules** must not modify Core functionality.
-- **Modules** can communicate with the Core only through predefined interfaces, such as logging utilities and configuration files.
-
----
-# MAJ-OLD
-
 # KaoBox Module Contract
 
 ## Purpose
 
-Defines how modules are allowed to interact with the KaoBox core.
+This document defines how modules interact with the KaoBox Core.
 
-Modules must extend.
-They must never modify.
+Modules extend the system.
+They must never modify or weaken the Core.
+
+The Core remains deterministic.
+Modules provide business logic.
 
 ---
 
-## Location
+# Architectural Principle
+
+Core = Infrastructure  
+Modules = Engines  
+
+Separation is mandatory.
+
+---
+
+# Location
 
 All modules must reside in:
 
-    /opt/kaobox/modules/<module_name>/
+/opt/kaobox/modules/<module_name>/
+
+Example:
+/opt/kaobox/modules/memory/
 
 ---
 
-## Required Structure
+# Required Structure
 
 Each module must contain:
 
 - init.sh        → initialization entrypoint
-- index.sh       → exposed functions registry
+- index.sh       → public module entry
+- query.sh       → exposed query interface (if applicable)
 
-Optional:
-- hooks.sh
-- README.md
-- config/
+Recommended structure:
+
+module/
+├── engine/      → low-level logic
+├── context/     → adaptive logic (if applicable)
+├── init.sh
+├── index.sh
+├── query.sh
+└── gc.sh
+
+Modules must explicitly expose their public interface.
 
 ---
 
-## Allowed Interactions
+# Core Responsibilities
 
-Modules may:
+Core is responsible for:
 
+- Environment bootstrap
+- Logging system
+- Sanity validation
+- Locking
+- Localization
+- Runtime state management
+
+Core provides:
+
+- Logging utilities
+- Environment variables
+- Controlled execution context
+- Stable runtime state
+
+Core must remain:
+
+- Deterministic
+- Minimal
+- Module-agnostic
+
+---
+
+# Allowed Interactions
+
+Modules MAY:
+
+- Use Core logging utilities
 - Read from state/
-- Append to logs/
-- Register commands through defined hooks
-- Execute isolated logic
+- Write to logs/
+- Use defined environment variables
+- Persist their own data
+- Register CLI commands through the dispatcher layer
+- Maintain their own internal SQLite schema
+
+Modules MAY implement:
+
+- Adaptive ranking
+- Context engines
+- Graph logic
+- Business-specific storage
+
+---
+
+# Forbidden Interactions
 
 Modules must NOT:
 
@@ -59,35 +109,132 @@ Modules must NOT:
 - Modify base/
 - Override bin/brain
 - Directly alter golden.version
+- Modify other modules
+- Depend on undocumented global variables
+
+Core integrity is non-negotiable.
 
 ---
 
-## Hook System (Planned Phase 2)
+# CLI Separation Rule
 
-Future standard hooks:
+CLI layer (lib/brain/commands/) must:
+
+- Validate arguments
+- Call module interfaces
+- Not contain business logic
+
+Modules must expose callable functions.
+CLI must orchestrate, not compute.
+
+---
+
+# Isolation Rule
+
+Modules must:
+
+- Be self-contained
+- Fail safely
+- Handle their own schema
+- Not assume external state unless explicitly provided
+
+If a module crashes,
+Core must remain operational.
+
+---
+
+# Determinism Rule
+
+Core is deterministic.
+
+Modules may introduce adaptive behavior,
+but only inside their isolated engine.
+
+Example:
+- Context ranking
+- Temporal decay
+- Session boosting
+
+These must never compromise Core stability.
+
+---
+
+# Hook System (Future Extension)
+
+Planned standard hooks:
 
 - on_init
 - on_before_execute
 - on_after_execute
 - on_shutdown
 
-Hooks must be explicitly registered.
+Hooks must be:
+
+- Explicitly registered
+- Non-invasive
+- Optional
+
+Core must function without any module installed.
 
 ---
 
-## Isolation Rule
+# Data Ownership Rule
+
+Each module owns:
+
+- Its database schema
+- Its indexing logic
+- Its ranking model
+- Its internal cache
+
+Core owns:
+
+- Runtime state
+- System versioning
+- Execution safety
+
+---
+
+# Failure Model
 
 Modules must:
 
-- Be self-contained
-- Fail safely
-- Not assume global variables unless defined by core
+- Fail explicitly
+- Log errors
+- Not silently corrupt state
+- Not block system startup
+
+Graceful degradation is mandatory.
 
 ---
 
-## Determinism Rule
+# Extension Philosophy
 
-Core must remain deterministic.
+Modules are engines.
 
-Modules may introduce adaptive behavior,
-but never at the cost of core integrity.
+They may introduce:
+
+- Intelligence
+- Context
+- Learning
+- Ranking
+
+But never structural instability.
+
+---
+
+# Contract Summary
+
+Core:
+- Deterministic
+- Stable
+- Minimal
+
+Modules:
+- Isolated
+- Explicit
+- Replaceable
+- Evolvable
+
+KaoBox grows through modules,
+not by expanding the Core.

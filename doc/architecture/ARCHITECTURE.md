@@ -1,129 +1,223 @@
-## System Layers
-
-### Layer 0 — OS
-Linux environment
-
-### Layer 1 — Kaobox Core
-`core/`
-`init.sh`
-`state/`
-`lang/`
-
-Responsibilities:
-- Bootstrap
-- Environment setup
-- Logging
-- Safety
-- Localization
-
-### Layer 2 — Modules
-`lib/*`
-`modules/*`
-
-Responsibilities:
-- Business logic
-- Storage
-- CLI commands
-
-### Layer 3 — CLI Entrypoints
-`bin/*`
-
----
-# MAJ-OLD
-
 # KaoBox Architecture
 
 ## Overview
 
-KaoBox is a modular agentic infrastructure designed as a deterministic brain system.
+KaoBox is a modular cognitive infrastructure designed as a deterministic brain kernel.
 
 Root path:
-    /opt/kaobox
 
-The system is structured in layers.
+/opt/kaobox
 
----
+The system is layered to enforce:
 
-## Layer 1 — Base
-
-Directory:
-    base/
-
-Contains system manifests.
-
-Purpose:
-- Define golden state
-- Define required tools
-- Define minimal runtime expectations
+- Determinism
+- Isolation
+- Explicit state
+- Controlled extensibility
 
 ---
 
-## Layer 2 — Core
-
-Directory:
-    core/
-
-Contains the system engine.
-
-Components:
-- env.sh       → environment bootstrap
-- logger.sh    → logging system
-- sanity.sh    → validation checks
-- i18n.sh      → language support
-- init.sh      → system initialization
-
-Core is deterministic and must not depend on modules.
+# System Layers
 
 ---
 
-## Layer 3 — Modules
+## Layer 0 — Operating System
+
+Environment:
+- Linux
+- Bash
+- SQLite
+
+KaoBox assumes a controlled POSIX runtime.
+
+---
+
+## Layer 1 — Core (Deterministic Kernel)
 
 Directory:
-    modules/
+core/
+init.sh
+state/
+lang/
 
-Optional extensions.
+Responsibilities:
+
+- Environment bootstrap
+- Logging system
+- Sanity validation
+- Localization
+- Locking
+- Deterministic execution
+
+Core must:
+
+- Not depend on modules
+- Not contain business logic
+- Remain minimal and stable
+
+Core = infrastructure only.
+
+---
+
+## Layer 2 — Modules (Business Engines)
+
+Directory:
+modules/
+
+Modules contain domain engines.
 
 Current module:
-    memory/
+modules/memory/
+
+### Memory Module Structure
+
+memory/
+├── engine/      → low-level indexing logic
+├── context/     → adaptive contextual ranking engine
+├── index.sh
+├── query.sh
+├── gc.sh
+└── init.sh
 
 Modules must:
+
 - Be isolated
-- Not modify core directly
-- Use defined hooks
+- Not mutate core
+- Expose explicit interfaces
+- Remain composable
+
+---
+
+## Context Engine (Phase 3.2)
+
+Location:
+modules/memory/context/
+
+Components:
+
+- resolver.sh → Collect contextual layers
+- scorer.sh   → Adaptive weighted ranking
+- session.sh  → Active node persistence
+
+### Context Layers
+
+- SELF
+- GRAPH_OUT
+- GRAPH_IN
+- RECENT
+
+### Ranking Model
+
+Score =
+    (Layer Weight × Temporal Decay)
+    + Session Boost
+
+Layer Weights:
+
+- SELF      → 4
+- GRAPH_OUT → 3
+- GRAPH_IN  → 2
+- RECENT    → 1
+
+Temporal Decay:
+
+- 0–1 days   → 100%
+- 2–7 days   → 70%
+- 8–30 days  → 40%
+- >30 days   → 20%
+
+Session Boost:
+
+- +5 if note is active focus
+
+This creates an adaptive contextual graph.
+
+---
+
+## Layer 3 — CLI Interface
+
+Directory:
+lib/brain/commands/
+
+Responsibilities:
+
+- User-facing commands
+- Argument validation
+- Delegation to modules
+
+CLI must:
+
+- Not contain business logic
+- Only orchestrate modules
+
+Entrypoint:
+bin/brain
 
 ---
 
 ## Layer 4 — Runtime State
 
 Directory:
-    state/
+state/
 
 Contains:
+
 - version state
 - language state
 - runtime flags
 
-This directory is mutable.
+Mutable by design.
 
 ---
 
 ## Layer 5 — Documentation
 
 Directory:
-    doc/
+doc/
 
-Contains system-level documentation:
-- architecture
-- agent specification
-- roadmap
-- state records
+Contains:
+
+- Architecture definitions
+- Agent specifications
+- Roadmap
+- Phase history
+- Test protocols
+
+Documentation is considered part of the system contract.
 
 ---
 
-## Design Principles
+# Design Principles
 
-- Deterministic core
-- Modular extensions
-- Explicit state
-- Minimal surface
-- Infrastructure first, intelligence second
+1. Deterministic Core  
+2. Modular Engines  
+3. Explicit State  
+4. Minimal Coupling  
+5. Infrastructure First  
+6. Intelligence as Layered Emergence  
+
+---
+
+# Architectural Identity
+
+KaoBox is not a workspace.
+
+It is a programmable cognitive kernel.
+
+Where most systems optimize UI,
+KaoBox optimizes structured cognition.
+
+---
+
+# Future Extensions
+
+- Hybrid semantic ranking (FTS integration)
+- Usage reinforcement learning
+- Multi-module orchestration
+- Agentic execution layer
+
+---
+
+# Status
+
+Phase 3.2 — Context Engine: STABLE

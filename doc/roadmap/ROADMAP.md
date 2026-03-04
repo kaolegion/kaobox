@@ -1,6 +1,6 @@
 # KaoBox Roadmap
 
-Version: v2.8  
+Version: v2.9  
 Last Update: 2026-03-04
 
 ---
@@ -11,24 +11,29 @@ Infrastructure before intelligence.
 Stability before expansion.  
 Determinism before automation.
 
-KaoBox is a modular, deterministic system orchestrator with a hardened cognitive memory layer (Brain).
+KaoBox is a modular deterministic system orchestrator
+with a hardened cognitive memory engine (Brain)
+and an emerging structured agent layer.
 
 ---
 
 # Phase 1 — Structural Foundation ✅
 
 Objectives:
-- Clean architecture
-- Deterministic core
-- Strict separation between core and modules
+
+- Clean layered architecture
+- Deterministic Core
+- Strict separation between Core and Modules
 - Environment contract stabilization
 - Modular engine design
 - Documentation baseline
 
 Memory:
+
 - Brain module initialized
 - SQL-only emission model
 - Transaction wrapper architecture
+- Explicit schema ownership
 
 Status: COMPLETE
 
@@ -37,27 +42,33 @@ Status: COMPLETE
 # Phase 2 — Production Hardening (Brain v2.8) ✅
 
 Objective:
-Transform Brain into a production-grade, concurrency-safe memory engine.
+
+Transform Brain into a production-grade,
+concurrency-safe memory engine.
 
 Delivered:
 
-### SQLite Hardening
+## SQLite Hardening
+
 - WAL mode enabled
 - FULL synchronous durability
 - BEGIN IMMEDIATE transactional control
 - Runtime `.timeout` injection
 
-### Safety Layer
+## Safety Layer
+
 - Integrity check integrated into `brain doctor`
 - Schema validation
 - Strict environment validation
 
-### Maintenance Automation
+## Maintenance Automation
+
 - Intelligent WAL checkpoint (batch only)
 - Automatic `PRAGMA optimize` post-batch
 - Transactional garbage collector
 
-### Guarantees
+## Guarantees
+
 - Crash-safe writes
 - Multi-process safe indexing
 - Controlled WAL growth
@@ -69,20 +80,68 @@ Status: STABLE
 
 ---
 
-# Phase 3 — Operational Intelligence (Next)
+# Phase 3 — Operational Intelligence (v2.9) 🚧
+
+Objective:
+
+Build a stable operational layer
+on top of the hardened infrastructure.
+
+## Phase 3.1 — CLI Stabilization
+
+- Command normalization
+- Dispatcher cleanup
+- Argument validation consistency
+- Shell integration
+- Completion system
+
+## Phase 3.2 — Context Engine ✅
+
+Location:
+modules/memory/context/
+
+Delivered:
+
+- Context resolver
+- Adaptive scoring model
+- Session focus tracking
+- Layered ranking system
+
+Context Layers:
+
+- SELF
+- GRAPH_OUT
+- GRAPH_IN
+- RECENT
+
+Scoring Model:
+
+Score =
+    (Layer Weight × Temporal Decay)
+    + Session Boost
+
+Outcome:
+
+Context-aware memory navigation
+without breaking Core determinism.
+
+Status: STABLE
+
+---
+
+## Phase 3.3 — Observability & Health (Next)
 
 Goals:
 
-- CLI stabilization
-- Command normalization
-- Query layer expansion
-- Shell integration
-- Completion system
-- Runtime state observability
-- Health scoring system
+- Runtime health scoring
+- Context diagnostics
+- Brain explainability output
+- Focus traceability
+- CLI introspection tools
 
 Expected outcome:
-Stable operational interface over hardened infrastructure.
+
+Transparent operational intelligence layer.
 
 Status: IN PROGRESS
 
@@ -90,33 +149,50 @@ Status: IN PROGRESS
 
 # Phase 4 — Adaptive Layer
 
-Goals:
+Goal:
 
-- Advanced semantic indexing
-- Context-aware execution
-- Cross-note graph intelligence
+Introduce controlled adaptive intelligence
+above deterministic infrastructure.
+
+Planned:
+
+- Hybrid semantic indexing (FTS + graph)
+- Context-aware execution policies
+- Cross-note graph reinforcement
 - Multi-module orchestration
-- Observability expansion
+- Structured planning layer
+- Agent task routing
+
+Constraint:
+
+Adaptive logic must remain modular.
+Core must remain deterministic.
 
 Expected outcome:
-Semi-autonomous operational agent.
+
+Semi-autonomous structured agent.
 
 Status: PLANNED
 
 ---
 
-# Phase 5 — Distributed Brain (Long-term)
+# Phase 5 — Distributed Brain (Long-Term)
+
+Vision:
+
+Extend KaoBox beyond a single runtime.
 
 Goals:
 
 - Multi-brain instances
 - State replication
 - Remote orchestration
+- Snapshot & recovery layer
 - External toolchain integration
-- Snapshot and recovery layer
 
 Expected outcome:
-Distributed agentic system.
+
+Distributed agentic infrastructure.
 
 Status: VISION
 
@@ -128,7 +204,8 @@ Status: VISION
 - Deterministic transaction boundaries
 - No hidden state
 - Modular isolation
-- Maintenance automation over manual repair
+- Crash-safe by design
+- Explicit state mutation
 - Versioned architectural milestones
 
 ---
@@ -137,5 +214,10 @@ Status: VISION
 
 Brain v2.8 is production-hardened and concurrency-safe.
 
-KaoBox is transitioning from infrastructure maturity  
-to operational intelligence expansion.
+Phase 3.2 Context Engine is operational and stable.
+
+KaoBox is transitioning from:
+
+Infrastructure maturity  
+→ Operational intelligence  
+→ Structured adaptive cognition
