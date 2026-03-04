@@ -16,12 +16,15 @@ cmd_doctor() {
         return 1
     fi
 
+    echo "✅ Database present"
+    echo "✅ Notes directory present"
+
     # ----------------------------------
-    # Check tables existence
+    # Check tables existence (safe timeout)
     # ----------------------------------
 
-    tables=$(sqlite3 "$BRAIN_DB" \
-        "SELECT name FROM sqlite_master WHERE type='table';")
+    tables=$(sqlite3 -batch "$BRAIN_DB" -cmd ".timeout 5000" \
+        "SELECT name FROM sqlite_master WHERE type='table';" 2>/dev/null)
 
     for t in notes tags note_tags notes_fts; do
         if ! echo "$tables" | grep -qx "$t"; then
@@ -30,15 +33,21 @@ cmd_doctor() {
         fi
     done
 
+    echo "✅ Schema OK"
+
     # ----------------------------------
-    # Integrity check
+    # Integrity check (WAL-safe)
     # ----------------------------------
 
-    integrity=$(sqlite3 "$BRAIN_DB" "PRAGMA integrity_check;")
+    integrity=$(sqlite3 -batch "$BRAIN_DB" -cmd ".timeout 5000" \
+        "PRAGMA integrity_check;" 2>/dev/null)
 
-    if [[ "$integrity" != "ok" ]]; then
-        echo "❌ Database integrity check failed:"
-        echo "$integrity"
+    if [[ "$integrity" == "ok" ]]; then
+        echo "✅ Integrity check: OK"
+    else
+        echo "❌ Integrity check failed"
+        echo "Details: $integrity"
+        echo "🧠 Brain status: CORRUPTED"
         return 1
     fi
 

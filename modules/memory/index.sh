@@ -61,13 +61,8 @@ index_note() {
     # -------------------------
     # Extract metadata
     # -------------------------
-    local title hash mtime size content
 
-    title="$(extract_title "$file")"
-    hash="$(compute_hash "$file")"
-    mtime="$(file_mtime "$file")"
-    size="$(file_size "$file")"
-    content="$(cat "$file")"
+    analyze_file "$file"
 
     # -------------------------
     # Atomic transaction
@@ -75,14 +70,14 @@ index_note() {
     {
         begin_tx
 
-        metadata_sql "$file" "$title" "$hash" "$mtime" "$size"
-        fts_sql "$file" "$title" "$content"
+        metadata_sql "$file" "$FILE_TITLE" "$FILE_HASH" "$FILE_MTIME" "$FILE_SIZE"
+        fts_sql "$file" "$FILE_TITLE" "$FILE_CONTENT"
         tags_sql "$file" "$file"
         links_sql "$file" "$file"
 
         commit_tx
 
-    } | sqlite3 "$BRAIN_DB" || {
+    } | sqlite3 -batch "$BRAIN_DB" -cmd ".timeout 5000" || {
         echo "[Memory][ERROR] Index transaction failed: $file" >&2
         return 1
     }
@@ -102,33 +97,40 @@ reindex_all() {
         begin_tx
 
         for file in "${files[@]}"; do
+            require_absolute "$file"
             require_file "$file"
 
-            local title hash mtime size content
+            analyze_file "$file"
 
-            title="$(extract_title "$file")"
-            hash="$(compute_hash "$file")"
-            mtime="$(file_mtime "$file")"
-            size="$(file_size "$file")"
-            content="$(cat "$file")"
-
-            metadata_sql "$file" "$title" "$hash" "$mtime" "$size"
-            fts_sql "$file" "$title" "$content"
+            metadata_sql "$file" "$FILE_TITLE" "$FILE_HASH" "$FILE_MTIME" "$FILE_SIZE"
+            fts_sql "$file" "$FILE_TITLE" "$FILE_CONTENT"
             tags_sql "$file" "$file"
             links_sql "$file" "$file"
         done
-
-        # -------------------------
+		# -------------------------
         # Integrated Garbage Collector
         # -------------------------
         gc_sql "$BRAIN_NOTES_DIR"
 
-        commit_tx
-
-    } | sqlite3 "$BRAIN_DB" || {
-        echo "[Memory][ERROR] Batch reindex transaction failed" >&2
-        return 1
-    }
-
-    echo "[Memory] Batch reindex complete (v2.7)"
+		commit_tx
+		} | sqlite3 -batch "$BRAIN_DB" -cmd ".timeout 5000" || {
+		    echo "[Memory][ERROR] Batch reindex failed" >&2
+		    return 1
+		}
+		
+		# ---------------------------------------------------------
+		# WAL Checkpoint (intelligent - batch only)
+		# ---------------------------------------------------------
+		
+		sqlite3 -batch "$BRAIN_DB" -cmd ".timeout 5000" \
+		    "PRAGMA wal_checkpoint(TRUNCATE);" >/dev/null 2>&1
+		
+		# ---------------------------------------------------------
+		# SQLite Optimize (post-batch maintenance)
+		# ---------------------------------------------------------
+		
+		sqlite3 -batch "$BRAIN_DB" -cmd ".timeout 5000" \
+		    "PRAGMA optimize;" >/dev/null 2>&1
+		
+		log INFO "Batch reindex completed (${#files[@]} files)"
 }

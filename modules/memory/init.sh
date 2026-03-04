@@ -14,29 +14,32 @@ set -euo pipefail
 #
 # Version: Brain v2.6 Stable
 # =========================================================
+source /opt/kaobox/lib/brain/env.sh
 
-KX_DATA="/data"
-KX_BRAIN="$KX_DATA/brain"
-KX_INDEX="$KX_BRAIN/.index"
-KX_DB="$KX_INDEX/brain.db"
-
-export BRAIN_DB="$KX_DB"
+[[ -n "${BRAIN_DB:-}" ]] || {
+    echo "[Memory][ERROR] BRAIN_DB not defined"
+    exit 1
+}
 
 echo "[Memory] Ensuring brain directory structure..."
 
-mkdir -p "$KX_BRAIN/inbox"
-mkdir -p "$KX_BRAIN/notes"
-mkdir -p "$KX_BRAIN/projects"
-mkdir -p "$KX_BRAIN/archive"
-mkdir -p "$KX_INDEX"
+mkdir -p "$BRAIN_ROOT/inbox"
+mkdir -p "$BRAIN_ROOT/notes"
+mkdir -p "$BRAIN_ROOT/projects"
+mkdir -p "$BRAIN_ROOT/archive"
+mkdir -p "$INDEX_DIR"
 
 # =========================================================
 # SQLITE INITIALIZATION
 # =========================================================
 
-sqlite3 "$KX_DB" <<'SQL'
+sqlite3 "$BRAIN_DB" <<'SQL'
 
+PRAGMA journal_mode=WAL;
+PRAGMA synchronous=NORMAL;
 PRAGMA foreign_keys=ON;
+PRAGMA busy_timeout=5000;
+PRAGMA journal_size_limit=10485760;
 
 -- =====================================================
 -- CORE NOTES TABLE

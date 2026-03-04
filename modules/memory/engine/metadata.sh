@@ -8,27 +8,6 @@ set -euo pipefail
 # No direct sqlite3 calls.
 # Orchestrator manages execution & transactions.
 # ==========================================================
-
-compute_hash() {
-    sha256sum "$1" | awk '{print $1}'
-}
-
-file_mtime() {
-    stat -c %Y "$1"
-}
-
-file_size() {
-    stat -c %s "$1"
-}
-
-extract_title() {
-    head -n 1 "$1" | sed 's/^#\+ *//'
-}
-
-# ----------------------------------------------------------
-# SQL: UPSERT NOTE + RETURN ID
-# ----------------------------------------------------------
-
 metadata_sql() {
     local path="$1"
     local title="$2"
@@ -52,16 +31,5 @@ ON CONFLICT(path) DO UPDATE SET
     content_hash=excluded.content_hash,
     file_mtime=excluded.file_mtime,
     file_size=excluded.file_size;
-
-SELECT id FROM notes WHERE path='$(sql_escape "$path")';
 SQL
-}
-
-# ----------------------------------------------------------
-# SQL: DELETE NOTE (CASCADE CLEAN)
-# ----------------------------------------------------------
-
-delete_note_sql() {
-    local note_id="$1"
-    echo "DELETE FROM notes WHERE id=$note_id;"
 }
