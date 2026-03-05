@@ -1,17 +1,32 @@
 #!/usr/bin/env bash
 # ==========================================================
-# Brain Context Command
+# KaoBox Brain - Context Command Layer
+# ----------------------------------------------------------
+# Layer: Cognitive (Kernel Extension)
+# Depends on: context/{resolver,scorer,session}
 # ==========================================================
 
-source "$MODULES_ROOT/memory/context/resolver.sh"
-source "$MODULES_ROOT/memory/context/scorer.sh"
-source "$MODULES_ROOT/memory/context/session.sh"
+# ----------------------------------------------------------
+# Prevent double load
+# ----------------------------------------------------------
+[[ -n "${BRAIN_CONTEXT_CMD_LOADED:-}" ]] && return 0
+readonly BRAIN_CONTEXT_CMD_LOADED=1
+
+# ----------------------------------------------------------
+# Load Context Layer (Kernel level)
+# ----------------------------------------------------------
+source "$KAOBOX_ROOT/lib/brain/context/resolver.sh"
+source "$KAOBOX_ROOT/lib/brain/context/scorer.sh"
+source "$KAOBOX_ROOT/lib/brain/context/session.sh"
+
+# ==========================================================
+# Command: brain context
+# ==========================================================
 
 cmd_context() {
 
     local file="$1"
 
-    # --- Argument validation ---
     [[ -z "$file" ]] && {
         log_error "Usage: brain context <file>"
         return 1
@@ -22,9 +37,8 @@ cmd_context() {
         return 1
     }
 
-    log_info "Resolving context for $file"
+    log_info "[context] Resolving for $file"
 
-    # --- Safe pipeline ---
     set -o pipefail
 
     resolve_context "$file" \
@@ -35,11 +49,14 @@ cmd_context() {
         done
 
     local status=$?
-
     set +o pipefail
 
     return $status
 }
+
+# ==========================================================
+# Command: brain focus
+# ==========================================================
 
 cmd_focus() {
 
@@ -56,7 +73,7 @@ cmd_focus() {
     }
 
     session_set_active "$file"
-    log_info "Focused on: $file"
+    log_info "[context] Focused on: $file"
 
     cmd_context "$file"
 }
