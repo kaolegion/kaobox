@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
 [[ -n "${BRAIN_THINK_CMD_LOADED:-}" ]] && return 0
 readonly BRAIN_THINK_CMD_LOADED=1

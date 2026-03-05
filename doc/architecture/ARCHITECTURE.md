@@ -59,7 +59,10 @@ Core = infrastructure only.
 
 ---
 
-## Layer 2 — Modules (Business Engines)
+## Layer 2 — Cognitive Layer (lib/brain/)
+
+    - context/
+    - think/
 
 Directory:
 modules/
@@ -99,6 +102,27 @@ Components:
 - scorer.sh   → Adaptive weighted ranking
 - session.sh  → Active node persistence
 
+## Think Engine (Phase 3.2+)
+
+Location:
+lib/brain/context/
+
+Components:
+
+- engine.sh  → orchestration
+- ranker.sh  → composite scoring
+
+### Think Model
+
+FTS relevance (memory/query.sh)
++ Session focus boost
+= Composite ranking
+
+Future:
++ Graph proximity boost
++ Tag similarity
++ Temporal blending
+
 ### Context Layers
 
 - SELF
@@ -136,22 +160,20 @@ This creates an adaptive contextual graph.
 
 ## Layer 3 — CLI Interface
 
-Directory:
-lib/brain/commands/
+## Think Engine
 
-Responsibilities:
+Location:
+lib/brain/think/
 
-- User-facing commands
-- Argument validation
-- Delegation to modules
+Purpose:
+Composite retrieval and ranking layer.
 
-CLI must:
+Dependencies:
+- memory/query.sh
+- context/session.sh
 
-- Not contain business logic
-- Only orchestrate modules
-
-Entrypoint:
-bin/brain
+Scoring:
+normalized_fts + focus_boost
 
 ---
 
