@@ -2,20 +2,29 @@
 set -euo pipefail
 
 # ==========================================================
-# KAOBOX - Memory Index Orchestrator (v2.7 Stable)
-# ----------------------------------------------------------
-# Responsibilities:
-#   - Public API
-#   - Strict transaction control
-#   - Atomic single index
-#   - Transactional batch reindex
-#   - Integrated Garbage Collector
-#
-# Design:
-#   - Engine emits SQL only
-#   - Orchestrator pipes to sqlite3
-#   - No direct DB logic outside pipeline
+# KaoBox - Memory Index Orchestrator (Module Pure)
 # ==========================================================
+
+[[ -n "${BRAIN_INDEX_LOADED:-}" ]] && return 0
+readonly BRAIN_INDEX_LOADED=1
+
+# ----------------------------------------------------------
+# Environment validation (module must not exit shell)
+# ----------------------------------------------------------
+
+[[ -n "${BRAIN_DB:-}" ]] || {
+    echo "[Memory][ERROR] BRAIN_DB not defined" >&2
+    return 1
+}
+
+[[ -f "$BRAIN_DB" ]] || {
+    echo "[Memory][ERROR] Database not found: $BRAIN_DB" >&2
+    return 1
+}
+
+# ----------------------------------------------------------
+# Engine bootstrap
+# ----------------------------------------------------------
 
 BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ENGINE="$BASE_DIR/engine"
@@ -29,44 +38,32 @@ source "$ENGINE/links.sh"
 source "$BASE_DIR/gc.sh"
 
 # ----------------------------------------------------------
-# ENVIRONMENT VALIDATION
+# Notes directory (respects env)
 # ----------------------------------------------------------
 
-[[ -n "${BRAIN_DB:-}" ]] || {
-    echo "[Memory][ERROR] BRAIN_DB not defined" >&2
-    exit 1
-}
+: "${BRAIN_NOTES_DIR:=$NOTES_DIR}"
+readonly BRAIN_NOTES_DIR
 
-[[ -f "$BRAIN_DB" ]] || {
-    echo "[Memory][ERROR] Database not found: $BRAIN_DB" >&2
-    exit 1
-}
+# ----------------------------------------------------------
+# SQLite wrapper
+# ----------------------------------------------------------
 
-# Default notes directory (can be overridden)
-BRAIN_NOTES_DIR="${BRAIN_NOTES_DIR:-/data/brain/notes}"
+_sqlite_index_exec() {
+    sqlite3 -batch "$BRAIN_DB" -cmd ".timeout 5000"
+}
 
 # ==========================================================
 # INDEX SINGLE NOTE
 # ==========================================================
 
 index_note() {
+
     local file="$1"
 
-    # -------------------------
-    # Preconditions
-    # -------------------------
     require_absolute "$file"
     require_file "$file"
-
-    # -------------------------
-    # Extract metadata
-    # -------------------------
-
     analyze_file "$file"
 
-    # -------------------------
-    # Atomic transaction
-    # -------------------------
     {
         begin_tx
 
@@ -77,12 +74,12 @@ index_note() {
 
         commit_tx
 
-    } | sqlite3 -batch "$BRAIN_DB" -cmd ".timeout 5000" || {
+    } | _sqlite_index_exec || {
         echo "[Memory][ERROR] Index transaction failed: $file" >&2
         return 1
     }
 
-    echo "[Memory] Indexed (v2.7): $file"
+    log INFO "Indexed: $file"
 }
 
 # ==========================================================
@@ -90,6 +87,7 @@ index_note() {
 # ==========================================================
 
 reindex_all() {
+
     local files=("$@")
     [[ ${#files[@]} -eq 0 ]] && return 0
 
@@ -99,7 +97,6 @@ reindex_all() {
         for file in "${files[@]}"; do
             require_absolute "$file"
             require_file "$file"
-
             analyze_file "$file"
 
             metadata_sql "$file" "$FILE_TITLE" "$FILE_HASH" "$FILE_MTIME" "$FILE_SIZE"
@@ -107,30 +104,19 @@ reindex_all() {
             tags_sql "$file" "$file"
             links_sql "$file" "$file"
         done
-		# -------------------------
-        # Integrated Garbage Collector
-        # -------------------------
+
         gc_sql "$BRAIN_NOTES_DIR"
 
-		commit_tx
-		} | sqlite3 -batch "$BRAIN_DB" -cmd ".timeout 5000" || {
-		    echo "[Memory][ERROR] Batch reindex failed" >&2
-		    return 1
-		}
-		
-		# ---------------------------------------------------------
-		# WAL Checkpoint (intelligent - batch only)
-		# ---------------------------------------------------------
-		
-		sqlite3 -batch "$BRAIN_DB" -cmd ".timeout 5000" \
-		    "PRAGMA wal_checkpoint(TRUNCATE);" >/dev/null 2>&1
-		
-		# ---------------------------------------------------------
-		# SQLite Optimize (post-batch maintenance)
-		# ---------------------------------------------------------
-		
-		sqlite3 -batch "$BRAIN_DB" -cmd ".timeout 5000" \
-		    "PRAGMA optimize;" >/dev/null 2>&1
-		
-		log INFO "Batch reindex completed (${#files[@]} files)"
+        commit_tx
+
+    } | _sqlite_index_exec || {
+        echo "[Memory][ERROR] Batch reindex failed" >&2
+        return 1
+    }
+
+    # WAL maintenance (non critical)
+    sqlite3 -batch "$BRAIN_DB" "PRAGMA wal_checkpoint(TRUNCATE);" >/dev/null 2>&1 || true
+    sqlite3 -batch "$BRAIN_DB" "PRAGMA optimize;" >/dev/null 2>&1 || true
+
+    log INFO "Batch reindex completed (${#files[@]} files)"
 }

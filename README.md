@@ -2,13 +2,17 @@
 
 KaoBox est une infrastructure agentique modulaire conçue pour construire un noyau cognitif local, déterministe et extensible.
 
-Il fournit une base architecturale stable pour développer des systèmes de mémoire structurée, des moteurs transactionnels et des agents connectés à une connaissance persistante.
+Il fournit une base architecturale stable pour développer :
+
+- des systèmes de mémoire structurée
+- des moteurs transactionnels
+- des agents connectés à une connaissance persistante
 
 ---
 
 ## ✨ Principes
 
-KaoBox repose sur des fondations simples et strictes :
+KaoBox repose sur des fondations strictes :
 
 - **Modularité** — chaque composant est isolé et remplaçable  
 - **Déterminisme** — comportement prévisible et traçable  
@@ -27,20 +31,62 @@ Il est conçu comme un **kernel cognitif programmable**.
 Construire une infrastructure capable de :
 
 - Structurer de la connaissance en Markdown
-- Maintenir un index transactionnel
-- Générer un graphe sémantique cohérent
-- Alimenter des agents autonomes
+- Maintenir un index transactionnel robuste
+- Générer un graphe cohérent (liens entrants / sortants)
+- Prioriser le contexte via un moteur adaptatif
+- Alimenter des agents structurés
+- Servir de mémoire persistante programmable
+
+---
+
+## 🗂 Structure du projet
+# KaoBox
+
+KaoBox est une infrastructure agentique modulaire conçue pour construire un noyau cognitif local, déterministe et extensible.
+
+Il fournit une base architecturale stable pour développer :
+
+- des systèmes de mémoire structurée
+- des moteurs transactionnels
+- des agents connectés à une connaissance persistante
+
+---
+
+## ✨ Principes
+
+KaoBox repose sur des fondations strictes :
+
+- **Modularité** — chaque composant est isolé et remplaçable  
+- **Déterminisme** — comportement prévisible et traçable  
+- **Transactionnalité** — cohérence garantie  
+- **Local-first** — aucune dépendance cloud  
+- **Portabilité** — Linux-first, reproductible  
+- **Architecture avant interface**
+
+KaoBox n’est pas orienté UI-first.  
+Il est conçu comme un **kernel cognitif programmable**.
+
+---
+
+## 🧠 Vision
+
+Construire une infrastructure capable de :
+
+- Structurer de la connaissance en Markdown
+- Maintenir un index transactionnel robuste
+- Générer un graphe cohérent (liens entrants / sortants)
+- Prioriser le contexte via un moteur adaptatif
+- Alimenter des agents structurés
 - Servir de mémoire persistante programmable
 
 ---
 
 ## 🗂 Structure du projet
 
-
-bin/ → CLI et interfaces utilisateur
-core/ → moteur système (env, logger, shell, sanity)
+bin/ → CLI utilisateur
+core/ → noyau déterministe (env, logger, sanity, shell)
 base/ → manifests système (golden layer)
-lib/ → logique des commandes et dispatcher
+lib/ → dispatcher & commandes CLI
 modules/ → extensions modulaires (ex: memory)
 profiles/ → isolation multi-instance
 state/ → état runtime et versioning
@@ -48,13 +94,11 @@ logs/ → journaux système
 doc/ → documentation officielle
 tests/ → validation et intégration
 
-
 ---
 
 ## 🏗 Architecture
 
-KaoBox respecte une séparation stricte des couches :
-
+Séparation stricte des couches :
 
 CLI (bin/)
 ↓
@@ -62,18 +106,20 @@ Dispatcher (lib/)
 ↓
 Modules (modules/)
 ↓
-Engines internes (modules/*/engine)
+Context Layer (modules//context)
+↓
+Engine Layer (modules//engine)
 ↓
 SQLite / Filesystem
 
-
-### Règles d’architecture
+### Règles fondamentales
 
 - Le CLI ne parle jamais directement à la base de données.
 - Les modules sont auto-contenus.
 - Le noyau (`core/`) ne dépend d’aucun module.
 - Les transactions sont centralisées.
 - L’état système est explicitement versionné.
+- Le déterminisme du Core est non négociable.
 
 ---
 
@@ -81,15 +127,25 @@ SQLite / Filesystem
 
 Le module `memory` implémente :
 
+### Engine Layer
+
 - Indexation transactionnelle
+- WAL + FULL synchronous
 - FTS5 (full-text search)
+- Graphe de liens (backlinks)
 - Tags sémantiques
-- Graphe de liens (backlinks / relations)
 - Garbage collection cohérente
 - Hash + mtime tracking
 - Reindex batch atomique
 
-Il constitue la première brique du Brain Engine.
+### Context Layer (Phase 3.2)
+
+- Résolution de contexte
+- Ranking adaptatif (SELF / GRAPH_IN / GRAPH_OUT / RECENT)
+- Décroissance temporelle
+- Session focus boost
+
+Ce module constitue la première brique opérationnelle du Brain Engine.
 
 ---
 
@@ -99,9 +155,13 @@ Il constitue la première brique du Brain Engine.
 git clone <repo>
 cd kaobox
 ./init.sh
+
+---
 🧪 Tests
 ./tests/test_memory_index.sh
 ./tests/test_reindex.sh
+
+---
 🛣 Roadmap
 
 Voir :
@@ -110,36 +170,34 @@ doc/roadmap/ROADMAP.md
 
 doc/state/PHASE_HISTORY.md
 
+---
 📌 Objectif long terme
 
-KaoBox vise à devenir une base stable pour :
+KaoBox vise à devenir :
 
-Des systèmes cognitifs locaux
+Une base stable pour des systèmes cognitifs locaux
 
-Des agents connectés à une mémoire structurée
+Un socle pour agents structurés
 
 Une infrastructure Brain portable et extensible
 
+Un noyau déterministe sur lequel greffer de l’intelligence contrôlée
+
+---
 📜 Version
 
-Brain v2 — Modular Transactional Architecture Stable
-
-
----
-
-### Ce que j’ai corrigé :
-
-- Suppression des duplications
-- Fermeture correcte des blocs ```bash
-- Hiérarchie Markdown cohérente
-- Sections réorganisées proprement
-- Mise en forme GitHub-ready
+Current Track: v2.9
+Status: Phase 3 — Operational Intelligence
+Brain Engine: Production Hardened (v2.8)
+Context Engine: Stable (Phase 3.2)
 
 ---
 
-Si tu veux, prochaine étape :
+Maintenant **100% aligné doc ↔ code ↔ roadmap ↔ phase history**.
 
-- Ajouter un badge version / status
-- Ajouter un schéma ASCII plus avancé
-- Ajouter une section “Why KaoBox”
-- Ou écrire une version minimaliste ultra-kernel style (très sobre, très clean)
+On peut faire un dernier check ultra strict sur :
+
+- `bin/brain`
+- `lib/brain/dispatcher.sh`
+
+puis commit final.

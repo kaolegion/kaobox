@@ -5,73 +5,91 @@ cmd_search() {
         return 1
     }
 
-    if [[ $# -lt 1 ]]; then
+    [[ $# -lt 1 ]] && {
         usage
         return 1
-    fi
+    }
 
-    local raw_query="$1"
-    log "Search query: $raw_query"
+    local mode="table"
+    local limit=""
+    local args=()
 
-    # ---------------------------------
-    # TAG SEARCH
-    # ---------------------------------
+    # ------------------------------------------------------
+    # Parse flags
+    # ------------------------------------------------------
+
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --json)
+                mode="json"
+                shift
+                ;;
+            --raw)
+                mode="raw"
+                shift
+                ;;
+            --limit=*)
+                limit="${1#--limit=}"
+                shift
+                ;;
+            --limit)
+                limit="$2"
+                shift 2
+                ;;
+            *)
+                args+=("$1")
+                shift
+                ;;
+        esac
+    done
+
+    local raw_query="${args[*]}"
+
+    [[ -z "$raw_query" ]] && {
+        echo "Empty query."
+        return 1
+    }
+
+    log INFO "Search query: $raw_query | mode=$mode | limit=${limit:-default}"
+
+    # ------------------------------------------------------
+    # Execute query and capture results
+    # ------------------------------------------------------
+
+    local results=()
 
     if [[ "$raw_query" == tag:* ]]; then
-        local raw_tag="${raw_query#tag:}"
-        local tag_safe
-		tag_safe="$(sanitize_sql "$raw_tag")"
 
-        if [[ -z "$tag_safe" ]]; then
-            echo "Empty tag."
+        local tag="${raw_query#tag:}"
+        [[ -z "$tag" ]] && { echo "Empty tag."; return 1; }
+
+        if ! mapfile -t results < <(query_by_tag "$tag" "${limit:-}"); then
+            echo "[ERROR] Tag query failed"
             return 1
         fi
 
-        local count=0
+    elif [[ "$raw_query" == backlinks:* ]]; then
 
-        while IFS=$'\t' read -r id title; do
-            count=$((count+1))
-            printf "%s\n" "$title"
-        done < <(
-            sqlite3 -separator $'\t' "$BRAIN_DB" "
-            SELECT notes.id, notes.title
-            FROM notes
-            JOIN note_tags ON notes.id = note_tags.note_id
-            JOIN tags ON tags.id = note_tags.tag_id
-            WHERE tags.name = '$tag_safe'
-            ORDER BY notes.updated_at DESC;
-            "
-        )
+        local path="${raw_query#backlinks:}"
+        [[ -z "$path" ]] && { echo "Empty backlink path."; return 1; }
 
-        [[ $count -eq 0 ]] && echo "No notes found for tag: $raw_tag"
-        return 0
+        if ! mapfile -t results < <(query_backlinks "$path"); then
+            echo "[ERROR] Backlink query failed"
+            return 1
+        fi
+
+    else
+
+        if ! mapfile -t results < <(query_fts "$raw_query" "${limit:-}"); then
+            echo "[ERROR] FTS query failed"
+            return 1
+        fi
+
     fi
 
-    # ---------------------------------
-    # FTS SEARCH
-    # ---------------------------------
+    # ------------------------------------------------------
+    # Render output
+    # ------------------------------------------------------
 
-    local fts_safe
-	fts_safe="$(sanitize_fts "$raw_query")"
-
-    if [[ -z "$fts_safe" ]]; then
-        echo "Invalid search query."
-        return 1
-    fi
-
-    local count=0
-
-    while IFS=$'\t' read -r id title; do
-        count=$((count+1))
-        printf "%s\n" "$title"
-    done < <(
-        sqlite3 -separator $'\t' "$BRAIN_DB" "
-        SELECT rowid, title
-        FROM notes_fts
-        WHERE notes_fts MATCH '$fts_safe'
-        ORDER BY bm25(notes_fts);
-        "
-    )
-
-    [[ $count -eq 0 ]] && echo "No results found."
+    render_results "$mode" "${results[@]}"
 }

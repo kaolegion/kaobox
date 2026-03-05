@@ -1,3 +1,22 @@
-old/
-logs/*
-!logs/.keep
+# Runtime
+logs/
+profiles/
+state/*
+!state/golden.version
+!state/system.lang
+
+# Locks
+*.lock
+
+# Temp
+*.bak
+*.tmp
+*.swp
+
+# Snapshots
+brain_dump.txt
+brain_base64.txt
+kaobox_snapshot.txt
+
+# OS
+.DS_Store

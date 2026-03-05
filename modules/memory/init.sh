@@ -14,7 +14,23 @@ set -euo pipefail
 #
 # Version: Brain v2.6 Stable
 # =========================================================
-source /opt/kaobox/lib/brain/env.sh
+
+# Environment must be injected by dispatcher
+
+[[ -n "${BRAIN_DB:-}" ]] || {
+    echo "[Memory][ERROR] Environment not initialized (BRAIN_DB missing)"
+    exit 1
+}
+
+[[ -n "${BRAIN_ROOT:-}" ]] || {
+    echo "[Memory][ERROR] BRAIN_ROOT not defined"
+    exit 1
+}
+
+[[ -n "${INDEX_DIR:-}" ]] || {
+    echo "[Memory][ERROR] INDEX_DIR not defined"
+    exit 1
+}
 
 [[ -n "${BRAIN_DB:-}" ]] || {
     echo "[Memory][ERROR] BRAIN_DB not defined"

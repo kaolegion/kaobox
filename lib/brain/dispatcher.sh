@@ -1,31 +1,176 @@
-usage() {
-    echo "Usage:"
-    echo "  brain new \"Title\""
-    echo "  brain search <query>"
-    echo "  brain search tag:<tag>"
-    echo "  brain open <filename>"
-    echo "  brain ls"
-    echo "  brain reindex"
-    echo "  brain doctor"
-    exit 0
+#!/usr/bin/env bash
+set -euo pipefail
+
+# ==========================================================
+# KaoBox Brain - CLI Dispatcher (Kernel v3.0)
+# Deterministic • Modular • Safe
+# ==========================================================
+
+# ----------------------------------------------------------
+# Prevent double loading
+# ----------------------------------------------------------
+
+if [[ "${BASH_SOURCE[0]}" != "$0" ]]; then
+    [[ -n "${BRAIN_DISPATCHER_LOADED:-}" ]] && return 0
+    readonly BRAIN_DISPATCHER_LOADED=1
+fi
+
+# ----------------------------------------------------------
+# Detect Root
+# ----------------------------------------------------------
+
+if [[ -z "${KAOBOX_ROOT:-}" ]]; then
+    KAOBOX_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+fi
+export KAOBOX_ROOT
+
+# ----------------------------------------------------------
+# Safe source helper
+# ----------------------------------------------------------
+
+safe_source() {
+    local file="$1"
+    [[ -f "$file" ]] || {
+        echo "Fatal: missing file $file"
+        exit 1
+    }
+    # shellcheck source=/dev/null
+    source "$file"
 }
 
-dispatch() {
-    local cmd="${1:-}"
+# ----------------------------------------------------------
+# Load Core (ORDER MATTERS)
+# ----------------------------------------------------------
 
-    if [[ -z "$cmd" ]]; then
-        cmd_fuzzy
-        return
-    fi
+safe_source "$KAOBOX_ROOT/lib/brain/env.sh"
+safe_source "$KAOBOX_ROOT/core/logger.sh"
+safe_source "$KAOBOX_ROOT/lib/brain/preflight.sh"
+safe_source "$KAOBOX_ROOT/lib/brain/sanitize.sh"
+safe_source "$KAOBOX_ROOT/lib/brain/lock.sh"
+safe_source "$KAOBOX_ROOT/lib/brain/renderer.sh"
+
+# ----------------------------------------------------------
+# Paths
+# ----------------------------------------------------------
+
+readonly COMMANDS_DIR="$KAOBOX_ROOT/lib/brain/commands"
+readonly MEMORY_QUERY="$MODULES_ROOT/memory/query.sh"
+readonly MEMORY_INDEX="$MODULES_ROOT/memory/index.sh"
+
+# ----------------------------------------------------------
+# Usage
+# ----------------------------------------------------------
+
+usage() {
+cat <<EOF
+🧠 KaoBox Brain CLI
+
+Usage:
+  brain status
+  brain doctor
+  brain new "Title"
+  brain search <query>
+  brain open <file>
+  brain ls
+  brain reindex
+  brain fuzzy
+  brain context <file>
+  brain focus <file>
+EOF
+}
+
+# ----------------------------------------------------------
+# Command Loader
+# ----------------------------------------------------------
+
+load_command() {
+    local file="$1"
+    safe_source "$COMMANDS_DIR/$file"
+}
+
+# ----------------------------------------------------------
+# Dispatcher
+# ----------------------------------------------------------
+
+brain_dispatch() {
+
+    local cmd="${1:-help}"
+    [[ $# -gt 0 ]] && shift
 
     case "$cmd" in
-        search) shift; cmd_search "$@" ;;
-        new) shift; cmd_new "$@" ;;
-        open) shift; cmd_open "$@" ;;
-        ls) cmd_ls ;;
-        doctor) cmd_doctor ;;
-        reindex) cmd_reindex ;;
-        help) usage ;;
-        *) cmd_search "$cmd" ;;
+
+        # ---- System ----
+        status)
+            load_command "status.sh"
+            cmd_status "$@"
+            ;;
+
+        doctor)
+            load_command "doctor.sh"
+            cmd_doctor "$@"
+            ;;
+
+        # ---- Memory ----
+        new)
+            preflight_check
+            load_command "new.sh"
+            cmd_new "$@"
+            ;;
+
+        search)
+            preflight_check
+            safe_source "$MEMORY_QUERY"
+            load_command "search.sh"
+            cmd_search "$@"
+            ;;
+
+        open)
+            preflight_check
+            load_command "open.sh"
+            cmd_open "$@"
+            ;;
+
+        ls)
+            preflight_check
+            load_command "ls.sh"
+            cmd_ls "$@"
+            ;;
+
+        reindex)
+            preflight_check
+            safe_source "$MEMORY_INDEX"
+            load_command "reindex.sh"
+            cmd_reindex "$@"
+            ;;
+
+        fuzzy)
+            preflight_check
+            load_command "fuzzy.sh"
+            cmd_fuzzy "$@"
+            ;;
+
+        # ---- Context Layer ----
+        context)
+            preflight_check
+            load_command "context.sh"
+            cmd_context "$@"
+            ;;
+
+        focus)
+            preflight_check
+            load_command "context.sh"
+            cmd_focus "$@"
+            ;;
+
+        help|--help|-h)
+            usage
+            ;;
+
+        *)
+            log_error "Unknown command: $cmd"
+            echo
+            usage
+            exit 1
+            ;;
     esac
 }

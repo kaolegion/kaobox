@@ -1,36 +1,56 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-BRAIN_MOD="/opt/kaobox/modules"
-BRAIN_LIB="/opt/kaobox/lib/brain"
+# ==========================================================
+# KAOBOX - Brain CLI Entry Point (Kernel v2.9)
+# ----------------------------------------------------------
+# - Symlink safe
+# - Deterministic bootstrap
+# - Minimal surface
+# - Delegates to dispatcher only
+# ==========================================================
 
-# Core
-source "$BRAIN_LIB/env.sh"
-source "$BRAIN_LIB/logger.sh"
-source "$BRAIN_LIB/lock.sh"
-source "$BRAIN_LIB/preflight.sh"
-source "$BRAIN_LIB/sanitize.sh"
+# ----------------------------------------------------------
+# Resolve script directory (symlink-safe)
+# ----------------------------------------------------------
 
-# Modules
-source "$BRAIN_MOD/memory/index.sh"
-
-# Commands
-source "$BRAIN_LIB/commands/fuzzy.sh"
-source "$BRAIN_LIB/commands/search.sh"
-source "$BRAIN_LIB/commands/new.sh"
-source "$BRAIN_LIB/commands/open.sh"
-source "$BRAIN_LIB/commands/ls.sh"
-source "$BRAIN_LIB/commands/reindex.sh"
-source "$BRAIN_LIB/commands/doctor.sh"
-
-source "$BRAIN_LIB/dispatcher.sh"
-
-main() {
-    acquire_lock || exit 1
-    trap release_lock EXIT
-
-    preflight_check || exit 1
-    dispatch "$@"
+resolve_script_dir() {
+    local SOURCE="${BASH_SOURCE[0]}"
+    while [[ -h "$SOURCE" ]]; do
+        local DIR
+        DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+        SOURCE="$(readlink "$SOURCE")"
+        [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+    done
+    cd -P "$(dirname "$SOURCE")" && pwd
 }
 
-main "$@"
+SCRIPT_DIR="$(resolve_script_dir)"
+KAOBOX_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+export KAOBOX_ROOT
+
+# ----------------------------------------------------------
+# Prevent interactive profile bootstrap
+# ----------------------------------------------------------
+
+export KAOBOX_SKIP_PROFILE=1
+
+# ----------------------------------------------------------
+# Load Dispatcher
+# ----------------------------------------------------------
+
+DISPATCHER="$KAOBOX_ROOT/lib/brain/dispatcher.sh"
+
+[[ -f "$DISPATCHER" ]] || {
+    echo "Fatal: dispatcher not found at $DISPATCHER"
+    exit 1
+}
+
+# shellcheck source=/dev/null
+source "$DISPATCHER"
+
+# ----------------------------------------------------------
+# Main Execution
+# ----------------------------------------------------------
+
+brain_dispatch "$@"

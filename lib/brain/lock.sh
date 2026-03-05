@@ -1,24 +1,55 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
-readonly LOCK_DIR="/data/brain/.lock"
-readonly LOCK_FILE="$LOCK_DIR/brain.lock"
+# ==========================================================
+# KaoBox Brain - Lock System
+# ----------------------------------------------------------
+# - Deterministic
+# - Idempotent
+# - Dynamic FD allocation
+# - Safe release
+# ==========================================================
 
-mkdir -p "$LOCK_DIR" 2>/dev/null || true
+[[ -n "${BRAIN_LOCK_LOADED:-}" ]] && return 0
+readonly BRAIN_LOCK_LOADED=1
+
+: "${LOCK_DIR:=$INDEX_DIR/.lock}"
+: "${LOCK_FILE:=$LOCK_DIR/brain.lock}"
+
+readonly LOCK_DIR
+readonly LOCK_FILE
+
+# Dynamic FD (assigned at runtime)
+BRAIN_LOCK_FD=""
 
 acquire_lock() {
 
-    exec 200>"$LOCK_FILE" || {
-        echo "[Brain] Unable to open lock file."
+    # Prevent double acquisition in same process
+    if [[ -n "${BRAIN_LOCK_FD:-}" ]]; then
+        echo "[Brain] Lock already acquired in this process."
         return 1
-    }
+    fi
 
-    flock -n 200 || {
+    mkdir -p "$LOCK_DIR"
+
+    exec {BRAIN_LOCK_FD}>"$LOCK_FILE"
+
+    if ! flock -n "$BRAIN_LOCK_FD"; then
+        exec {BRAIN_LOCK_FD}>&-
+        BRAIN_LOCK_FD=""
         echo "[Brain] Another process is running. Aborting."
         return 1
-    }
+    fi
 }
 
 release_lock() {
-    flock -u 200 2>/dev/null || true
-    exec 200>&- 2>/dev/null || true
+
+    if [[ -z "${BRAIN_LOCK_FD:-}" ]]; then
+        return 0
+    fi
+
+    flock -u "$BRAIN_LOCK_FD" 2>/dev/null || true
+    exec {BRAIN_LOCK_FD}>&- 2>/dev/null || true
+
+    BRAIN_LOCK_FD=""
 }
