@@ -216,6 +216,18 @@ KaoBox optimizes structured cognition.
 - Multi-module orchestration
 - Agentic execution layer
 
+# Think Pipeline
+
+User Query
+   ↓
+FTS Query (modules/memory/query.sh)
+   ↓
+Think Engine (lib/brain/think/engine.sh)
+   ↓
+Ranker (composite scoring)
+   ↓
+Renderer
+
 ---
 
 # Status

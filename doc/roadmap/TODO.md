@@ -54,3 +54,11 @@ All future work must:
 - Maintain module isolation
 - Avoid hidden state
 - Remain reversible where possible
+
+---
+
+# Next: Graph Boost
+
+- Boost notes linked to active note
+- Weight configurable
+- Based on links table

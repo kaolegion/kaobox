@@ -145,6 +145,23 @@ Le module `memory` implémente :
 - Décroissance temporelle
 - Session focus boost
 
+## 🧠 Think Engine (Context-Aware Retrieval)
+
+The Think Engine combines:
+
+- SQLite FTS relevance (BM25)
+- Session-based focus boost
+- Composite ranking pipeline
+
+Scoring formula (v1):
+
+    composite_score = normalized_fts + focus_boost
+
+Future roadmap:
+- Graph-based proximity boost
+- Tag-based similarity
+- Temporal recency weighting
+
 Ce module constitue la première brique opérationnelle du Brain Engine.
 
 ---
