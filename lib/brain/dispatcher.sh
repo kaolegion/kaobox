@@ -76,6 +76,7 @@ Usage:
   brain fuzzy
   brain context <file>
   brain focus <file>
+  brain think <query>
 EOF
 }
 
@@ -160,6 +161,13 @@ brain_dispatch() {
             preflight_check
             load_command "context.sh"
             cmd_focus "$@"
+            ;;
+
+        # ---- Cognitive Layer ----
+        think)
+            preflight_check
+            load_command "think.sh"
+            cmd_think "$@"
             ;;
 
         help|--help|-h)

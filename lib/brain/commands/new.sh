@@ -1,36 +1,46 @@
 cmd_new() {
 
     [[ -n "${NOTES_DIR:-}" ]] || {
-        echo "[ERROR] NOTES_DIR not defined"
+        log_error "NOTES_DIR not defined"
         return 1
     }
 
-    if [[ $# -lt 1 ]]; then
+    [[ $# -lt 1 ]] && {
         usage
         return 1
-    fi
+    }
 
     local title="$1"
 
-    # Generate slug
+    # ------------------------------------------------------
+    # Slug generation
+    # ------------------------------------------------------
+
     local slug
     slug=$(printf "%s" "$title" \
         | tr '[:upper:]' '[:lower:]' \
         | tr ' ' '-' \
         | tr -cd 'a-z0-9-_')
 
-    if [[ -z "$slug" ]]; then
-        echo "[ERROR] Invalid title"
+    [[ -z "$slug" ]] && {
+        log_error "Invalid title"
         return 1
-    fi
+    }
 
     local filepath="$NOTES_DIR/$slug.md"
 
-    # Avoid overwrite
+    # ------------------------------------------------------
+    # Prevent overwrite
+    # ------------------------------------------------------
+
     if [[ -f "$filepath" ]]; then
-        echo "[ERROR] Note already exists: $filepath"
+        log_error "Note already exists: $filepath"
         return 1
     fi
+
+    # ------------------------------------------------------
+    # Create file
+    # ------------------------------------------------------
 
     cat > "$filepath" <<EOF
 # $title
@@ -43,13 +53,26 @@ Résumé:
 
 EOF
 
-    # Use internal index function (modular architecture)
-acquire_lock || {
-  echo "❌ Could not acquire lock"
-  return 1
-}
+    # ------------------------------------------------------
+    # Indexing (transactional)
+    # ------------------------------------------------------
 
-index_note "$filepath"
+    acquire_lock || {
+        log_error "Could not acquire lock"
+        rm -f "$filepath"
+        return 1
+    }
 
-release_lock
+    safe_source "$MEMORY_INDEX"
+
+    if ! index_note "$filepath"; then
+        log_error "Indexing failed. Rolling back file."
+        rm -f "$filepath"
+        release_lock
+        return 1
+    fi
+
+    release_lock
+
+    log_info "Note created and indexed: $filepath"
 }
