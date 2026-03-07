@@ -1,3 +1,8 @@
+#!/usr/bin/env bash
+# ==========================================================
+# KaoBox Brain - Doctor Command
+# ==========================================================
+
 cmd_doctor() {
 
     echo "[Brain] Running diagnostics..."

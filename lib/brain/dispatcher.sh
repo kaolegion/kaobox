@@ -77,6 +77,9 @@ Usage:
   brain context <file>
   brain focus <file>
   brain think <query>
+  brain stats
+  brain graph
+  brain explain
 EOF
 }
 
@@ -169,7 +172,25 @@ brain_dispatch() {
             load_command "think.sh"
             cmd_think "$@"
             ;;
+            
+        stats)
+			preflight_check
+			load_command "stats.sh"
+            cmd_stats "$@"
+            ;;
 
+		graph)
+		    preflight_check
+		    load_command "graph.sh"
+		    cmd_graph "$@"
+		    ;;
+
+		explain)
+		    preflight_check
+		    load_command "explain.sh"
+		    cmd_explain "$@"
+		    ;;    
+		
         help|--help|-h)
             usage
             ;;

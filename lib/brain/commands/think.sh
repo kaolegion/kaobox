@@ -1,4 +1,8 @@
 #!/usr/bin/env bash
+# ==========================================================
+# KaoBox Brain - Think Command
+# ==========================================================
+
 set -euo pipefail
 
 [[ -n "${BRAIN_THINK_CMD_LOADED:-}" ]] && return 0

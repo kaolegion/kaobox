@@ -2,6 +2,7 @@
 
 KAOBOX_DIR="/opt/kaobox"
 PROFILES_DIR="$KAOBOX_DIR/profiles"
+BRAIN_LIB="KAOBOX_DIR/lib/brain"
 
 clear
 echo "KAOBOX Environment Loaded"
