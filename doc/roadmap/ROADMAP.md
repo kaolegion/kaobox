@@ -138,6 +138,9 @@ Goals:
 - Brain explainability output
 - Focus traceability
 - CLI introspection tools
+- explain command stabilization
+- observability dashboard CLI
+- context scoring introspection
 
 Expected outcome:
 

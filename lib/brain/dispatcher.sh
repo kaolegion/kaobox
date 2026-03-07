@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+ #!/usr/bin/env bash
 set -euo pipefail
 
 # ==========================================================
@@ -54,8 +54,14 @@ safe_source "$KAOBOX_ROOT/lib/brain/renderer.sh"
 # ----------------------------------------------------------
 
 readonly COMMANDS_DIR="$KAOBOX_ROOT/lib/brain/commands"
+
 readonly MEMORY_QUERY="$MODULES_ROOT/memory/query.sh"
 readonly MEMORY_INDEX="$MODULES_ROOT/memory/index.sh"
+
+[[ -f "$MEMORY_QUERY" ]] || {
+    echo "Fatal: missing memory query module"
+    exit 1
+}
 
 # ----------------------------------------------------------
 # Usage
@@ -68,18 +74,30 @@ cat <<EOF
 Usage:
   brain status
   brain doctor
+
+Memory:
   brain new "Title"
-  brain search <query>
   brain open <file>
   brain ls
-  brain reindex
+  brain search <query>
   brain fuzzy
+  brain reindex
+
+Context:
   brain context <file>
   brain focus <file>
+
+Cognition:
   brain think <query>
-  brain stats
+
+Graph:
   brain graph
+  brain backlinks
+
+Debug:
+  brain stats
   brain explain
+
 EOF
 }
 
@@ -202,4 +220,12 @@ brain_dispatch() {
             exit 1
             ;;
     esac
+
+# TODO: Ajout pour debug dans dispatcher command - brain
+# ----------------------------------------------------------
+# Mode debug - < Brain
+# ----------------------------------------------------------
+
+[[ "$KAOBOX_DEBUG" == 1 ]] && echo "[debug] command=$1"
+
 }

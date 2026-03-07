@@ -2,32 +2,62 @@
 set -euo pipefail
 
 # ==========================================================
-# KAOBOX - Brain CLI Entry Point (Kernel v2.9)
+# KAOBOX - Brain CLI Entry Point
 # ----------------------------------------------------------
-# - Symlink safe
-# - Deterministic bootstrap
-# - Minimal surface
-# - Delegates to dispatcher only
+# Responsibilities:
+#   - Resolve install location
+#   - Minimal environment bootstrap
+#   - Delegate execution to dispatcher
+#
+# Guarantees:
+#   - Symlink-safe
+#   - Deterministic startup
+#   - Zero logic in entrypoint
+#
+# Version: Kernel v3
 # ==========================================================
+
+
+# ----------------------------------------------------------
+# Bash version check
+# ----------------------------------------------------------
+
+if (( BASH_VERSINFO[0] < 4 )); then
+    echo "KaoBox requires Bash 4 or newer."
+    exit 1
+fi
+
 
 # ----------------------------------------------------------
 # Resolve script directory (symlink-safe)
 # ----------------------------------------------------------
 
 resolve_script_dir() {
-    local SOURCE="${BASH_SOURCE[0]}"
-    while [[ -h "$SOURCE" ]]; do
-        local DIR
-        DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
-        SOURCE="$(readlink "$SOURCE")"
-        [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+
+    local source="${BASH_SOURCE[0]}"
+
+    while [[ -h "$source" ]]; do
+        local dir
+        dir="$(cd -P "$(dirname -- "$source")" && pwd)"
+
+        source="$(readlink "$source")"
+
+        [[ $source != /* ]] && source="$dir/$source"
     done
-    cd -P "$(dirname "$SOURCE")" && pwd
+
+    cd -P "$(dirname -- "$source")" && pwd
 }
 
 SCRIPT_DIR="$(resolve_script_dir)"
+
+
+# ----------------------------------------------------------
+# Detect KaoBox root
+# ----------------------------------------------------------
+
 KAOBOX_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 export KAOBOX_ROOT
+
 
 # ----------------------------------------------------------
 # Prevent interactive profile bootstrap
@@ -35,22 +65,46 @@ export KAOBOX_ROOT
 
 export KAOBOX_SKIP_PROFILE=1
 
+
 # ----------------------------------------------------------
-# Load Dispatcher
+# Dispatcher location
 # ----------------------------------------------------------
 
 DISPATCHER="$KAOBOX_ROOT/lib/brain/dispatcher.sh"
 
-[[ -f "$DISPATCHER" ]] || {
-    echo "Fatal: dispatcher not found at $DISPATCHER"
+
+# ----------------------------------------------------------
+# Validate dispatcher
+# ----------------------------------------------------------
+
+if [[ ! -f "$DISPATCHER" ]]; then
+    echo "[KaoBox Fatal]"
+    echo "Dispatcher not found."
+    echo "Expected path:"
+    echo "  $DISPATCHER"
     exit 1
-}
+fi
+
+
+# ----------------------------------------------------------
+# Load dispatcher
+# ----------------------------------------------------------
 
 # shellcheck source=/dev/null
 source "$DISPATCHER"
 
+# TODO: Ajout pour debug dans dispatcher command - brain
 # ----------------------------------------------------------
-# Main Execution
+# Mode debug - > Dispatcher
+# ----------------------------------------------------------
+
+: "${KAOBOX_DEBUG:=0}"
+export KAOBOX_DEBUG
+
+# ----------------------------------------------------------
+# Execute CLI
 # ----------------------------------------------------------
 
 brain_dispatch "$@"
+
+

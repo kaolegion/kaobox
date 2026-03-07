@@ -13,6 +13,9 @@ Aligned with Phase 3.2 completion
 - [ ] Add runtime diagnostics summary
 - [ ] Validate CLI exit codes consistency
 - [ ] Harden pipefail across dispatcher
+- [ ] add CLI regression tests
+- [ ] add index stress test
+- [ ] add concurrent indexing test
 
 ---
 

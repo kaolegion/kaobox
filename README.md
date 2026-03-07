@@ -1,144 +1,191 @@
 # KaoBox
 
-KaoBox est une infrastructure agentique modulaire conçue pour construire un noyau cognitif local, déterministe et extensible.
+KaoBox is a **modular cognitive infrastructure** designed to build a deterministic local knowledge kernel.
 
-Il fournit une base architecturale stable pour développer :
+It provides the architectural foundation for:
 
-- des systèmes de mémoire structurée
-- des moteurs transactionnels
-- des agents connectés à une connaissance persistante
+* structured knowledge systems
+* transaction-safe memory engines
+* context-aware retrieval
+* structured agents connected to persistent knowledge
 
----
-
-## ✨ Principes
-
-KaoBox repose sur des fondations strictes :
-
-- **Modularité** — chaque composant est isolé et remplaçable  
-- **Déterminisme** — comportement prévisible et traçable  
-- **Transactionnalité** — cohérence garantie  
-- **Local-first** — aucune dépendance cloud  
-- **Portabilité** — Linux-first, reproductible  
-- **Architecture avant interface**
-
-KaoBox n’est pas orienté UI-first.  
-Il est conçu comme un **kernel cognitif programmable**.
+KaoBox is **Linux-first, local-first, and deterministic by design**.
 
 ---
 
-## 🧠 Vision
+# Principles
 
-Construire une infrastructure capable de :
+KaoBox is built on strict engineering foundations.
 
-- Structurer de la connaissance en Markdown
-- Maintenir un index transactionnel robuste
-- Générer un graphe cohérent (liens entrants / sortants)
-- Prioriser le contexte via un moteur adaptatif
-- Alimenter des agents structurés
-- Servir de mémoire persistante programmable
+**Modularity**
+Every component is isolated and replaceable.
 
----
+**Determinism**
+Behavior must remain predictable and auditable.
 
-## 🗂 Structure du projet
+**Transactional Integrity**
+All state mutations are explicit and controlled.
 
-bin/               → CLI utilisateur
-core/              → noyau déterministe (env, logger, sanity, shell)
-lib/brain          → dispatcher & commandes CLI
-lib/brain/context/   ""
-lib/brain/think/     "" 
-modules/memory/    → moteur mémoire transactionnel 
-profiles/          → isolation multi-instance
-state/             → état runtime  
-logs/              → journaux  
-doc/               → documentation officielle  
-tests/             → validation n
+**Local-first Architecture**
+No mandatory cloud dependency.
+
+**Reproducibility**
+Systems must remain portable and inspectable.
+
+**Architecture before Interface**
+
+KaoBox is not UI-first.
+It is a **programmable cognitive kernel**.
 
 ---
 
-## 🏗 Architecture
+# Vision
 
-Séparation stricte des couches :
+KaoBox aims to provide an infrastructure capable of:
 
-CLI (bin/)
-↓
-Dispatcher (lib/brain/dispatcher.sh)
-↓
-Commands (lib/brain/commands/)
-↓
-Cognitive Layer (lib/brain/context + think)
-↓
-Memory Module (modules/memory/)
-↓
+* Structuring knowledge using Markdown
+* Maintaining a robust transactional index
+* Generating a coherent knowledge graph
+* Prioritizing context dynamically
+* Feeding structured agents
+* Serving as programmable persistent memory
+
+---
+
+# Project Structure
+
+```
+bin/               CLI entrypoints
+core/              deterministic kernel
+lib/brain/         brain dispatcher & commands
+lib/brain/context/ context engine
+lib/brain/think/   ranking & reasoning engine
+modules/memory/    transactional memory module
+state/             runtime system state
+logs/              runtime logs
+doc/               official documentation
+tests/             validation suite
+```
+
+---
+
+# Architecture
+
+```
+CLI
+ ↓
+Dispatcher
+ ↓
+Commands
+ ↓
+Cognitive Layer
+ ↓
+Memory Module
+ ↓
 SQLite + Filesystem
+```
 
-### Règles fondamentales
+### Core Rules
 
-- Le CLI ne parle jamais directement à la base de données.
-- Les modules sont auto-contenus.
-- Le noyau (`core/`) ne dépend d’aucun module.
-- Les transactions sont centralisées.
-- L’état système est explicitement versionné.
-- Le déterminisme du Core est non négociable.
-
----
-
-## 📦 Module Memory (Brain Engine)
-
-### Engine Layer
-
-- FTS5
-- WAL
-- Transaction control
-- Link graph
-- Tag system
-- Hash + mtime tracking
-
-### Context Layer (Phase 3.2)
-
-- Layered context resolution
-- Temporal decay
-- Session focus boost
-
-## 🧠 Think Engine (Context-Aware Retrieval)
-
-The Think Engine combines:
-Composite ranking:
-composite_score = normalized_fts + focus_boost
-Focus Boost: +5 on active note
+* CLI never talks directly to the database
+* Modules remain self-contained
+* `core/` never depends on modules
+* Transactions are centralized
+* System state is explicit and versioned
+* Determinism of the core is non-negotiable
 
 ---
 
-## 🚀 Installation (dev)
+# Brain Memory Engine
 
-```bash
+Features:
+
+* SQLite WAL
+* FTS5 search
+* Transaction control
+* Link graph
+* Tag system
+* File hash & mtime tracking
+
+---
+
+# Context Engine
+
+Context resolution uses layered signals:
+
+* SELF
+* GRAPH_OUT
+* GRAPH_IN
+* RECENT
+
+Ranking formula:
+
+```
+score =
+    (layer_weight × temporal_decay)
+    + session_boost
+```
+
+---
+
+# Think Engine
+
+Context-aware retrieval combining:
+
+```
+composite_score =
+    normalized_fts
+    + focus_boost
+```
+
+Focus Boost: +5 on active note.
+
+---
+
+# Installation
+
+```
 git clone <repo>
 cd kaobox
 ./init.sh
+```
 
 ---
-🧪 Tests
+
+# Tests
+
+```
 ./tests/test_memory_index.sh
+./tests/test_brain_cli.sh
+```
 
 ---
-🛣 Roadmap
 
-Voir :
+# Roadmap
+
+See:
+
+```
 doc/roadmap/ROADMAP.md
 doc/state/PHASE_HISTORY.md
+```
 
 ---
-📌 Objectif long terme
 
-KaoBox vise à devenir :
-Une base stable pour des systèmes cognitifs locaux
-Un socle pour agents structurés
-Une infrastructure Brain portable et extensible
-Un noyau déterministe sur lequel greffer de l’intelligence contrôlée
+# Long-Term Goal
+
+KaoBox aims to become:
+
+* a stable base for local cognitive systems
+* an infrastructure for structured agents
+* a portable programmable brain kernel
+* a deterministic substrate for controlled intelligence
 
 ---
-📜 Version
+
+# Version
 
 Track: v2.9
 Phase: 3.2 — Context Engine Stable
 Think Engine: v1 Stable
-Status: Operational Intelligence Base
+Status: Operational Cognitive Kernel

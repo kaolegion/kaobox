@@ -1,12 +1,9 @@
 #!/usr/bin/env bash
 # ==========================================
 # KAOBOX MODULE: env
-# Description: Global environment variables
-# Author: KAOBOX
-# Version: Golden-V1
+# Global environment variables
 # ==========================================
 
-# Prevent multiple sourcing
 [[ -n "${KAOBOX_ENV_LOADED:-}" ]] && return
 readonly KAOBOX_ENV_LOADED=1
 
@@ -16,8 +13,9 @@ readonly KAOBOX_ENV_LOADED=1
 
 readonly KAOBOX_ROOT="/opt/kaobox"
 readonly KAOBOX_CORE="$KAOBOX_ROOT/core"
+readonly KAOBOX_LIB="$KAOBOX_ROOT/lib"
 readonly KAOBOX_MODULES="$KAOBOX_ROOT/modules"
-readonly KAOBOX_I18N="$KAOBOX_ROOT/i18n"
+readonly KAOBOX_I18N="$KAOBOX_ROOT/lang"
 readonly KAOBOX_PROFILES="$KAOBOX_ROOT/profiles"
 
 # --------------------------------------------------
@@ -32,7 +30,7 @@ readonly KAOBOX_LOG_FILE="$KAOBOX_LOG_DIR/kaobox.log"
 # --------------------------------------------------
 
 readonly KAOBOX_VERSION="Golden-V1"
-readonly KAOBOX_RUNTIME="wsl"
+readonly KAOBOX_RUNTIME="${KAOBOX_RUNTIME:-linux}"
 
 # --------------------------------------------------
 # Debug
