@@ -1,6 +1,6 @@
 # KaoBox Phase History
 
-This document tracks architectural milestones.
+This document tracks architectural milestones.  
 Each phase represents a structural evolution of the system.
 
 ---
@@ -79,10 +79,9 @@ Phase 2 marks the stabilization of the infrastructure layer.
 
 ---
 
-# Phase 3 — Operational Intelligence 🚧
+# Phase 3 — Operational Intelligence (v2.9)
 
-Version: v2.9  
-Status: IN PROGRESS
+Status: ACTIVE
 
 Goal:
 
@@ -93,59 +92,102 @@ on top of hardened infrastructure.
 
 ## Phase 3.1 — CLI Stabilization ✅
 
+Delivered:
+
 - Command normalization
-- Dispatcher cleanup
+- Deterministic CLI dispatcher
 - Separation between CLI and business logic
 - Shell integration
-- Completion groundwork
+- Completion system
 
-CLI now orchestrates modules without containing logic.
+Impact:
+
+CLI became a thin orchestration layer.
 
 ---
 
-## Phase 3.2 — Context Engine ✅
+## Phase 3.2 — Context & Think Engine ✅
 
 Location:
-modules/memory/context/
 
-## Phase 3.2+ — Think Engine Stabilization
+lib/brain/context/  
+lib/brain/think/
 
-- Composite ranking stabilized
-- Safe TAB parsing
-- Session-based focus boost integrated
-- Strict dependency loading enforced
-- Documentation aligned with structure
+### Context Engine
 
-### Delivered
+Components:
+
+- resolver.sh
+- scorer.sh
+- session.sh
+
+Delivered:
 
 - Context resolver
-- Layered context model (SELF, GRAPH_IN, GRAPH_OUT, RECENT)
-- Adaptive scoring engine
-- Temporal decay model
+- Layered context model
+- Temporal decay scoring
 - Session focus persistence
 
-### Architectural Impact
+Context Layers:
+
+- SELF
+- GRAPH_OUT
+- GRAPH_IN
+- RECENT
+
+### Think Engine
+
+Components:
+
+- engine.sh
+- ranker.sh
+
+Delivered:
+
+- Composite ranking model
+- Focus boost integration
+- Robust TAB parsing
+- Strict dependency loading
+
+Ranking Model:
+
+composite_score =
+normalized_fts
++ focus_boost
+
+Architectural Impact:
 
 - Introduced contextual awareness
-- Preserved Core determinism
+- Preserved deterministic core
 - Maintained module isolation
-
-This phase marks the first controlled adaptive layer.
 
 ---
 
-## Phase 3.3 — Observability (Next)
+## Phase 3.3 — Observability Layer ✅
 
-Planned:
+Date: 2026-03-07
 
-- Health scoring system
-- Context explainability output
-- Focus trace tracing
-- Runtime introspection commands
+Delivered:
 
-Objective:
+- brain health
+- brain stats
+- brain session
+- brain explain
+- runtime diagnostics
+- CLI observability commands
+- graph command stabilization
+- full shellcheck compliance
 
-Make intelligence transparent and inspectable.
+Capabilities:
+
+- database integrity visibility
+- context inspection
+- query explainability
+- indexing diagnostics
+
+Impact:
+
+The cognitive system became **transparent and inspectable**.
 
 ---
 
@@ -157,7 +199,7 @@ Extend contextual intelligence toward structured agent behavior.
 
 Planned capabilities:
 
-- Hybrid semantic indexing (FTS + graph)
+- Hybrid semantic ranking (FTS + graph)
 - Cross-note reinforcement signals
 - Multi-module orchestration
 - Structured task planning
@@ -165,7 +207,7 @@ Planned capabilities:
 
 Constraint:
 
-Core must remain deterministic.
+Core must remain deterministic.  
 Adaptation must remain modular.
 
 ---
@@ -179,15 +221,6 @@ Long-term evolution:
 - Remote orchestration
 - Snapshot & recovery model
 - External toolchain integration
-
-## Phase 6 – Think Engine Stabilization
-
-Date: 2026-03-05
-
-- Fixed parsing robustness in ranker
-- Integrated session-based focus boost
-- Enforced strict dependency loading
-- Stabilized composite scoring
 
 ---
 
@@ -206,7 +239,8 @@ Phase 5 → Distributed Cognition
 Infrastructure: Stable  
 Memory Engine: Production-grade  
 Context Engine: Operational  
+Observability: Integrated  
 Agent Layer: Emerging  
 
 KaoBox has transitioned from a structural system
-to a controlled cognitive infrastructure.
+to a **deterministic cognitive infrastructure**.

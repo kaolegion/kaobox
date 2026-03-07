@@ -1,191 +1,286 @@
-# KaoBox
+# KaoBox Architecture
 
-KaoBox is a **modular cognitive infrastructure** designed to build a deterministic local knowledge kernel.
+## Overview
+KaoBox is a modular cognitive infrastructure designed as a **deterministic brain kernel**.
 
-It provides the architectural foundation for:
+Root path:
+/opt/kaobox
 
-* structured knowledge systems
-* transaction-safe memory engines
-* context-aware retrieval
-* structured agents connected to persistent knowledge
-
-KaoBox is **Linux-first, local-first, and deterministic by design**.
-
----
-
-# Principles
-
-KaoBox is built on strict engineering foundations.
-
-**Modularity**
-Every component is isolated and replaceable.
-
-**Determinism**
-Behavior must remain predictable and auditable.
-
-**Transactional Integrity**
-All state mutations are explicit and controlled.
-
-**Local-first Architecture**
-No mandatory cloud dependency.
-
-**Reproducibility**
-Systems must remain portable and inspectable.
-
-**Architecture before Interface**
-
-KaoBox is not UI-first.
-It is a **programmable cognitive kernel**.
+The system is layered to enforce:
+- Determinism
+- Isolation
+- Explicit state
+- Controlled extensibility
 
 ---
 
-# Vision
-
-KaoBox aims to provide an infrastructure capable of:
-
-* Structuring knowledge using Markdown
-* Maintaining a robust transactional index
-* Generating a coherent knowledge graph
-* Prioritizing context dynamically
-* Feeding structured agents
-* Serving as programmable persistent memory
+# System Layers
 
 ---
 
-# Project Structure
+# Layer 0 — Operating System
+Environment:
 
-```
-bin/               CLI entrypoints
-core/              deterministic kernel
-lib/brain/         brain dispatcher & commands
-lib/brain/context/ context engine
-lib/brain/think/   ranking & reasoning engine
-modules/memory/    transactional memory module
-state/             runtime system state
-logs/              runtime logs
-doc/               official documentation
-tests/             validation suite
-```
+- Linux
+- Bash
+- SQLite
+
+KaoBox assumes a controlled POSIX runtime.
 
 ---
 
-# Architecture
+# Layer 1 — Core (Deterministic Kernel)
+Directory:
+core/
 
-```
-CLI
- ↓
-Dispatcher
- ↓
-Commands
- ↓
-Cognitive Layer
- ↓
-Memory Module
- ↓
-SQLite + Filesystem
-```
+Components:
+- env.sh
+- init.sh
+- logger.sh
+- sanity.sh
+- shell.sh
+- lang/
+- state/
 
-### Core Rules
+Responsibilities:
+- Environment bootstrap
+- Logging
+- System validation
+- Localization
+- Deterministic runtime configuration
 
-* CLI never talks directly to the database
-* Modules remain self-contained
-* `core/` never depends on modules
-* Transactions are centralized
-* System state is explicit and versioned
-* Determinism of the core is non-negotiable
+Rules:
+
+Core must:
+- Never depend on modules
+- Never contain business logic
+- Remain minimal and stable
+
+Core = infrastructure only.
 
 ---
 
-# Brain Memory Engine
+# Layer 2 — Cognitive Layer (Brain)
+Directory:
+lib/brain/
 
-Features:
+Components:
+- dispatcher.sh
+- commands/
+- context/
+- think/
+- renderer.sh
+- sanitize.sh
+- preflight.sh
+- lock.sh
 
-* SQLite WAL
-* FTS5 search
-* Transaction control
-* Link graph
-* Tag system
-* File hash & mtime tracking
+This layer implements the **cognitive runtime**.
+
+Responsibilities:
+- command dispatch
+- context resolution
+- ranking logic
+- reasoning orchestration
+- rendering output
 
 ---
 
 # Context Engine
+Location:
+lib/brain/context/
 
-Context resolution uses layered signals:
+Components:
+- resolver.sh
+- scorer.sh
+- session.sh
 
-* SELF
-* GRAPH_OUT
-* GRAPH_IN
-* RECENT
+Purpose:
+Build contextual signals for ranking.
 
-Ranking formula:
+### Context Layers
+- SELF
+- GRAPH_OUT
+- GRAPH_IN
+- RECENT
 
-```
-score =
-    (layer_weight × temporal_decay)
-    + session_boost
-```
+### Ranking Model
+Score =
+(Layer Weight × Temporal Decay)
++ Session Boost
+
+Layer Weights:
+SELF → 4  
+GRAPH_OUT → 3  
+GRAPH_IN → 2  
+RECENT → 1
+
+Temporal Decay:
+0–1 days → 100%  
+2–7 days → 70%  
+8–30 days → 40%  
+>30 days → 20%
+
+Session Boost:
++5 if note is active focus
 
 ---
 
 # Think Engine
+Location:
+lib/brain/think/
 
-Context-aware retrieval combining:
+Components:
+- engine.sh
+- ranker.sh
 
-```
+Purpose:
+Composite retrieval and ranking.
+
+Dependencies:
+- memory/query.sh
+- context/session.sh
+
+Ranking formula:
 composite_score =
-    normalized_fts
-    + focus_boost
-```
+normalized_fts
++ focus_boost
 
-Focus Boost: +5 on active note.
-
----
-
-# Installation
-
-```
-git clone <repo>
-cd kaobox
-./init.sh
-```
+Focus boost:
++5 if note is active.
 
 ---
 
-# Tests
+# Layer 3 — Modules
+Directory:
+modules/
 
-```
-./tests/test_memory_index.sh
-./tests/test_brain_cli.sh
-```
+Modules provide **domain engines**.
 
----
-
-# Roadmap
-
-See:
-
-```
-doc/roadmap/ROADMAP.md
-doc/state/PHASE_HISTORY.md
-```
+Current module:
+modules/memory/
 
 ---
 
-# Long-Term Goal
+# Memory Module
+Location:
+modules/memory/
 
-KaoBox aims to become:
+Structure:
+memory/
+├── engine/
+│ ├── utils.sh
+│ ├── metadata.sh
+│ ├── fts.sh
+│ ├── tags.sh
+│ ├── links.sh
+│ └── tx.sh
+├── index.sh
+├── query.sh
+├── gc.sh
+└── init.sh
 
-* a stable base for local cognitive systems
-* an infrastructure for structured agents
-* a portable programmable brain kernel
-* a deterministic substrate for controlled intelligence
+Features:
+- SQLite WAL
+- FTS5 search
+- transactional indexing
+- tag extraction
+- markdown link graph
+- file hash tracking
+
+Modules must:
+- remain isolated
+- not mutate core
+- expose explicit interfaces
 
 ---
 
-# Version
+# Layer 4 — CLI Interface
+Directory:
+bin/
 
-Track: v2.9
-Phase: 3.2 — Context Engine Stable
-Think Engine: v1 Stable
-Status: Operational Cognitive Kernel
+Components:
+bin/brain
+bin/kaobox-shell
+
+The CLI:
+
+- parses user commands
+- invokes the brain dispatcher
+- never accesses the database directly
+
+---
+
+# Layer 5 — Runtime State
+Directory:
+state/
+
+Contains:
+- version state
+- language state
+- runtime flags
+
+Mutable by design.
+
+---
+
+# Layer 6 — Documentation
+Directory:
+doc/
+
+Contains:
+- architecture
+- roadmap
+- phase history
+- agent specifications
+- test protocols
+
+Documentation is considered part of the **system contract**.
+
+---
+
+# Think Pipeline
+User Query
+↓
+FTS Query (modules/memory/query.sh)
+↓
+Think Engine (lib/brain/think/engine.sh)
+↓
+Ranker
+↓
+Renderer
+↓
+CLI Output
+
+---
+
+# Design Principles
+1. Deterministic Core  
+2. Modular Engines  
+3. Explicit State  
+4. Minimal Coupling  
+5. Infrastructure First  
+6. Intelligence as Layered Emergence  
+
+---
+
+# Architectural Identity
+KaoBox is not a workspace.
+
+It is a **programmable cognitive kernel**.
+
+Where most systems optimize UI,
+KaoBox optimizes **structured cognition**.
+
+---
+
+# Future Extensions
+- Graph navigation engine
+- semantic ranking layer
+- reinforcement signals
+- agent orchestration layer
+
+---
+
+# Status
+Phase 3.3 — Observability Layer  
+System Status: **Stable Cognitive Kernel**

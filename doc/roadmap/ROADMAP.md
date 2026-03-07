@@ -1,7 +1,7 @@
 # KaoBox Roadmap
 
 Version: v2.9  
-Last Update: 2026-03-04
+Last Update: 2026-03-07
 
 ---
 
@@ -80,25 +80,34 @@ Status: STABLE
 
 ---
 
-# Phase 3 — Operational Intelligence (v2.9) 🚧
+# Phase 3 — Operational Intelligence (v2.9)
 
 Objective:
 
-Build a stable operational layer
+Build a stable operational cognitive layer
 on top of the hardened infrastructure.
 
-## Phase 3.1 — CLI Stabilization
+---
+
+## Phase 3.1 — CLI Stabilization ✅
+
+Delivered:
 
 - Command normalization
-- Dispatcher cleanup
+- Deterministic dispatcher
 - Argument validation consistency
 - Shell integration
-- Completion system
+- CLI completion system
+
+Status: COMPLETE
+
+---
 
 ## Phase 3.2 — Context Engine ✅
 
 Location:
-modules/memory/context/
+
+lib/brain/context/
 
 Delivered:
 
@@ -129,24 +138,31 @@ Status: STABLE
 
 ---
 
-## Phase 3.3 — Observability & Health (Next)
+## Phase 3.3 — Observability & Diagnostics ✅
 
-Goals:
+Delivered:
 
-- Runtime health scoring
-- Context diagnostics
-- Brain explainability output
-- Focus traceability
+- `brain health`
+- `brain stats`
+- `brain session`
+- `brain explain`
 - CLI introspection tools
-- explain command stabilization
-- observability dashboard CLI
-- context scoring introspection
+- runtime diagnostics
+- graph command stabilization
+- shellcheck cleanup
 
-Expected outcome:
+Capabilities:
+
+- runtime database inspection
+- context visibility
+- query introspection
+- indexing diagnostics
+
+Outcome:
 
 Transparent operational intelligence layer.
 
-Status: IN PROGRESS
+Status: COMPLETE
 
 ---
 
@@ -159,7 +175,7 @@ above deterministic infrastructure.
 
 Planned:
 
-- Hybrid semantic indexing (FTS + graph)
+- Hybrid semantic ranking (FTS + graph)
 - Context-aware execution policies
 - Cross-note graph reinforcement
 - Multi-module orchestration
@@ -168,7 +184,7 @@ Planned:
 
 Constraint:
 
-Adaptive logic must remain modular.
+Adaptive logic must remain modular.  
 Core must remain deterministic.
 
 Expected outcome:
@@ -215,9 +231,12 @@ Status: VISION
 
 # Current State Summary
 
-Brain v2.8 is production-hardened and concurrency-safe.
+Brain v2.9 provides:
 
-Phase 3.2 Context Engine is operational and stable.
+- transactional memory engine
+- context-aware retrieval
+- graph-based note relations
+- runtime observability tools
 
 KaoBox is transitioning from:
 

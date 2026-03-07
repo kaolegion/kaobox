@@ -1,120 +1,219 @@
-#!/usr/bin/env bash
-set -e
+E:\Documents-Kao\kaobox\tests\TESTS_GLOBAL.md
 
-source core/logger.sh
+## KaoBox Test Suite
 
-echo "Testing logger..."
+Version: v2.9
+Phase: 3.3 — Observability
 
-log_info "Info OK"
-log_warn "Warn OK"
-log_error "Error OK"
-log_debug "Debug OK"
+The tests/ directory contains the validation suite for KaoBox core components and modules.
 
-echo "Logger test complete."
-#!/usr/bin/env bash
+Tests ensure that KaoBox maintains its core architectural guarantees:
 
-# ==========================================
-# KAOBOX MEMORY MODULE TEST
-# Transactional Index Validation
-# ==========================================
+- determinism
+- modular isolation
+- transactional integrity
+- reproducibility
 
-set -euo pipefail
+Tests are designed to validate system behavior, not implementation details.
 
-trap 'echo "[FAIL] Unexpected error"; rm -f "$TEST_FILE"' ERR
+Test Philosophy
 
-echo "[TEST] Starting memory index test"
+KaoBox follows a strict validation philosophy.
 
-# ------------------------------------------
-# Resolve runtime paths
-# ------------------------------------------
+---
 
-: "${BRAIN_ROOT:=/data/brain}"
+## Tests must confirm that:
 
-BRAIN_DB="$BRAIN_ROOT/.index/brain.db"
-TEST_FILE="$BRAIN_ROOT/notes/__test_memory__.md"
+- the Core remains deterministic
+- modules operate without mutating Core
+- the memory engine remains transactional
+- the CLI behaves as a pure orchestration layer
 
-# ------------------------------------------
-# Preflight checks
-# ------------------------------------------
+Tests should be:
 
-[[ -f "$BRAIN_DB" ]] || {
-  echo "[FAIL] Database not found"
-  exit 1
-}
+- deterministic
+- reproducible
+- safe to run multiple times
+- non-destructive whenever possible
 
-mkdir -p "$(dirname "$TEST_FILE")"
+---
 
-# ------------------------------------------
-# Create test note
-# ------------------------------------------
+## Test Categories
 
-cat > "$TEST_FILE" <<EOF
-# Test Memory Module
+### 1 — Core Validation
 
-Tags: #alpha #beta
+Tests ensuring the deterministic infrastructure works.
 
-This is a test note for index validation.
-EOF
+Examples:
 
-echo "[TEST] Test file created"
+- logger initialization
+- environment loading
+- shell bootstrap
 
-# ------------------------------------------
-# Run reindex via CLI (architecture aligned)
-# ------------------------------------------
+Relevant test:
 
-brain reindex
+> test_logger.sh
 
-echo "[TEST] Reindex executed"
+---
 
-# ------------------------------------------
-# Validate note insertion
-# ------------------------------------------
+## 2 — Memory Engine Validation
 
-SAFE_PATH=$(printf "%s" "$TEST_FILE" | sed "s/'/''/g")
+These tests validate the transactional indexing system.
 
-NOTE_EXISTS=$(sqlite3 "$BRAIN_DB" \
-  "SELECT COUNT(*) FROM notes WHERE path = '$SAFE_PATH';")
+They confirm that:
 
-if [[ "$NOTE_EXISTS" != "1" ]]; then
-  echo "[FAIL] Note not inserted correctly"
-  exit 1
-fi
+- notes are indexed correctly
+- tags are extracted and linked
+- graph links are created
+- reindexing is deterministic
 
-echo "[PASS] Note inserted"
+Relevant test:
 
-# ------------------------------------------
-# Validate tag linkage
-# ------------------------------------------
+> test_memory_index.sh
 
-TAG_COUNT=$(sqlite3 "$BRAIN_DB" "
-SELECT COUNT(*)
-FROM tags t
-JOIN note_tags nt ON t.id = nt.tag_id
-JOIN notes n ON nt.note_id = n.id
-WHERE n.path = '$SAFE_PATH';
-")
+Validated features:
 
-if [[ "$TAG_COUNT" != "2" ]]; then
-  echo "[FAIL] Tags not linked correctly"
-  exit 1
-fi
+- metadata indexing
+- tag extraction
+- graph link extraction
+- SQLite transactional integrity
 
-echo "[PASS] Tags linked"
+---
 
-# ------------------------------------------
-# Cleanup (transactional)
-# ------------------------------------------
+## 3 — CLI Smoke Tests
 
-sqlite3 "$BRAIN_DB" <<SQL
-BEGIN;
-DELETE FROM note_tags WHERE note_id IN (
-  SELECT id FROM notes WHERE path = '$TEST_FILE'
-);
-DELETE FROM notes WHERE path = '$TEST_FILE';
-COMMIT;
-SQL
+Smoke tests validate that the CLI interface remains operational.
 
-rm -f "$TEST_FILE"
+They confirm that core commands execute without error.
 
-echo "[TEST] Cleanup done"
-echo "[SUCCESS] Memory index test completed"
+Relevant test:
+
+> test_brain_cli.sh
+
+Commands validated:
+
+> brain status
+> brain doctor
+> brain health
+> brain stats
+> brain session
+> brain search
+
+These tests do not validate output correctness,
+only that commands execute successfully.
+
+---
+
+## Test Execution
+
+All tests can be executed using the test runner:
+
+> tests/run_all.sh
+
+Execution order:
+
+1. Logger module
+2. Memory engine
+3. CLI smoke tests
+
+Example:
+
+> ./tests/run_all.sh
+
+Expected result:
+
+> [SUCCESS] All tests passed
+
+---
+
+## Determinism Guarantees
+
+The test suite ensures that:
+
+- reindexing produces stable results
+- graph extraction is deterministic
+- tags are consistently parsed
+- CLI commands remain safe to execute repeatedly
+
+These guarantees are essential to KaoBox architecture.
+
+---
+
+## Test Isolation
+
+Tests must respect KaoBox architectural constraints.
+
+They must never:
+
+- modify core/
+- alter system manifests
+- mutate runtime state unexpectedly
+- bypass the CLI architecture
+
+Memory tests must always operate through:
+
+> brain reindex
+
+Never through direct engine invocation.
+
+---
+
+## Snapshot Files
+
+Files ending with:
+> *_SNAPSHOT.sh
+
+are audit artifacts only.
+They are generated to inspect concatenated sources for review.
+They are not part of the execution pipeline and should not be executed directly.
+
+Source of truth always remains:
+> tests/*.sh
+
+---
+
+## Future Tests
+
+Planned additions:
+
+### Concurrency Tests
+
+Validate multiple indexing processes.
+
+### Stress Tests
+
+Large-scale indexing validation.
+
+### CLI Regression Tests
+
+Ensure CLI behavior remains stable across releases.
+
+### Context Engine Tests
+
+Validate:
+- context resolution
+- scoring stability
+- session boost behavior
+
+---
+
+## Long-Term Role
+
+The KaoBox test suite will evolve to validate:
+- cognitive ranking
+- graph traversal
+- adaptive context scoring
+- module interoperability
+
+Tests are part of the system contract and must evolve with architecture.
+
+---
+
+## Summary
+
+The tests/ directory provides deterministic validation of:
+- Core infrastructure
+- Memory engine behavior
+- CLI stability
+
+It ensures KaoBox remains a reproducible cognitive kernel rather than an opaque system.

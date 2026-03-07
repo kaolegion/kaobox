@@ -22,7 +22,11 @@ release_lock
 *.tmp
 *.swp
 
-# Snapshots
+# Snapshots / audit artifacts
+*_SNAPSHOT.sh
+tests/tmp/
+
+# Snapshots text artifacts
 brain_dump.txt
 brain_base64.txt
 kaobox_snapshot.txt
