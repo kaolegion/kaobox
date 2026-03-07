@@ -1,5 +1,14 @@
+#!/usr/bin/env bash
 # ==========================================================
 # KAOBOX - File Analysis Helper (v3 Hardened)
+# ----------------------------------------------------------
+# Shared analysis state for memory indexing pipeline
+# Produces:
+#   FILE_TITLE
+#   FILE_HASH
+#   FILE_MTIME
+#   FILE_SIZE
+#   FILE_CONTENT
 # ==========================================================
 
 analyze_file() {
@@ -9,10 +18,17 @@ analyze_file() {
 
     unset FILE_TITLE FILE_HASH FILE_MTIME FILE_SIZE FILE_CONTENT
 
+    # Shared globals populated here and consumed by:
+    #   metadata_sql / fts_sql / tags_sql / links_sql
+    # shellcheck disable=SC2034
     FILE_TITLE="$(extract_title "$file")" || return 1
+    # shellcheck disable=SC2034
     FILE_HASH="$(compute_hash "$file")" || return 1
+    # shellcheck disable=SC2034
     FILE_MTIME="$(file_mtime "$file")" || return 1
+    # shellcheck disable=SC2034
     FILE_SIZE="$(file_size "$file")" || return 1
+    # shellcheck disable=SC2034
     FILE_CONTENT="$(cat "$file")" || return 1
 }
 
@@ -22,6 +38,7 @@ analyze_file() {
 
 require_absolute() {
     local path="$1"
+
     [[ "$path" = /* ]] || {
         echo "[Memory][ERROR] Path must be absolute: $path" >&2
         return 1
@@ -30,6 +47,7 @@ require_absolute() {
 
 require_file() {
     local path="$1"
+
     [[ -f "$path" ]] || {
         echo "[Memory][ERROR] File not found: $path" >&2
         return 1
@@ -41,19 +59,23 @@ require_file() {
 # ==========================================================
 
 extract_title() {
-    grep -m1 '^# ' "$1" | sed 's/^# //'
+    local file="$1"
+    grep -m1 '^# ' "$file" | sed 's/^# //'
 }
 
 compute_hash() {
-    sha256sum "$1" | awk '{print $1}'
+    local file="$1"
+    sha256sum "$file" | awk '{print $1}'
 }
 
 file_mtime() {
-    stat -c %Y "$1"
+    local file="$1"
+    stat -c %Y "$file"
 }
 
 file_size() {
-    stat -c %s "$1"
+    local file="$1"
+    stat -c %s "$file"
 }
 
 # ==========================================================
@@ -61,5 +83,6 @@ file_size() {
 # ==========================================================
 
 sql_escape() {
-    printf "%s" "$1" | sed "s/'/''/g"
+    local value="$1"
+    printf "%s" "$value" | sed "s/'/''/g"
 }

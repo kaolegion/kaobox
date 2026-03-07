@@ -9,40 +9,39 @@ set -euo pipefail
 # Uses note IDs
 # ==========================================================
 
-
 # ----------------------------------------------------------
 # Extract [[links]] from markdown
 # ----------------------------------------------------------
-
 extract_links() {
 
     local file="$1"
 
-    grep -oE '\[\[[^]]+\]\]' "$file" \
-        | sed -E 's/\[\[//;s/\]\]//' \
+    [[ -f "$file" ]] || return 0
+
+    grep -oE '\[\[[^]]+\]\]' "$file" 2>/dev/null \
+        | sed -E 's/\[\[//; s/\]\]//' \
         | sed -E 's/\|.*//' \
         | sed -E 's/#.*//' \
         | tr '[:upper:]' '[:lower:]'
 }
 
-
 # ----------------------------------------------------------
 # Emit SQL to index links
 # ----------------------------------------------------------
-
 links_sql() {
 
     local path="$1"
     local file="$2"
 
-    local source_id="(SELECT id FROM notes WHERE path='$(sql_escape "$path")')"
+    local source_id
+    source_id="(SELECT id FROM notes WHERE path='$(sql_escape "$path")')"
 
-    # remove existing links
+    # Remove existing outgoing links for this source note
     echo "DELETE FROM links WHERE source_id = $source_id;"
 
+    local target
     while IFS= read -r target; do
-
-        [[ -z "$target" ]] && continue
+        [[ -z "${target:-}" ]] && continue
 
         target="$(sql_escape "$target")"
 

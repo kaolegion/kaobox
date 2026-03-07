@@ -1,29 +1,55 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
-KAOBOX_DIR="/opt/kaobox"
-PROFILES_DIR="$KAOBOX_DIR/profiles"
-BRAIN_LIB="KAOBOX_DIR/lib/brain"
+# ==========================================================
+# KaoBox Shell — Minimal Interactive Runner
+# ----------------------------------------------------------
+# - Deterministic prompt loop
+# - Exposes KaoBox env
+# - Executes user commands locally
+# ==========================================================
+
+: "${KAOBOX_DIR:=/opt/kaobox}"
+export KAOBOX_DIR
+
+export PROFILES_DIR="$KAOBOX_DIR/profiles"
+export BRAIN_LIB="$KAOBOX_DIR/lib/brain"
 
 clear
 echo "KAOBOX Environment Loaded"
-echo "Type 'exit' to leave Kaobox"
-echo ""
+echo "Type 'help' for commands — 'exit' to leave KaoBox"
+echo
 
 while true; do
-    read -p "kaobox> " cmd
+
+    # Prompt (read -r prevents backslash mangling)
+    read -r -p "kaobox> " cmd || { echo; break; }
+
+    # Ignore empty input
+    [[ -z "${cmd:-}" ]] && continue
 
     case "$cmd" in
-        exit)
-            echo "Leaving Kaobox..."
+        exit|quit)
+            echo "Leaving KaoBox..."
             break
             ;;
         help)
-            echo "Available commands:"
-            echo " help  - show this help"
-            echo " exit  - leave kaobox"
+            cat <<'EOF'
+Available commands:
+  help        show this help
+  exit|quit   leave kaobox
+  env         show KaoBox env vars
+Anything else is executed as a shell command.
+EOF
+            ;;
+        env)
+            echo "KAOBOX_DIR=$KAOBOX_DIR"
+            echo "PROFILES_DIR=$PROFILES_DIR"
+            echo "BRAIN_LIB=$BRAIN_LIB"
             ;;
         *)
-            bash -c "$cmd"
+            # Execute as typed (no extra subshell)
+            eval "$cmd"
             ;;
     esac
 done

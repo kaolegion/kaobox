@@ -9,24 +9,35 @@ set -euo pipefail
 # Must run inside active transaction.
 # ==========================================================
 
+# ----------------------------------------------------------
 # Extract hashtags: #tag
+# ----------------------------------------------------------
 extract_tags() {
-    grep -oE '#[A-Za-z0-9_-]+' "$1" \
+    local file="$1"
+
+    [[ -f "$file" ]] || return 0
+
+    grep -oE '#[A-Za-z0-9_-]+' "$file" 2>/dev/null \
         | sed 's/^#//' \
         | sort -u
 }
 
+# ----------------------------------------------------------
+# Emit SQL to index tags
+# ----------------------------------------------------------
 tags_sql() {
     local path="$1"
     local file="$2"
 
-    local note_id="(SELECT id FROM notes WHERE path='$(sql_escape "$path")')"
+    local note_id
+    note_id="(SELECT id FROM notes WHERE path='$(sql_escape "$path")')"
 
     # Clear previous tag relations
     echo "DELETE FROM note_tags WHERE note_id = $note_id;"
 
+    local tag
     while IFS= read -r tag; do
-        [[ -z "$tag" ]] && continue
+        [[ -z "${tag:-}" ]] && continue
 
         cat <<SQL
 -- Ensure tag exists

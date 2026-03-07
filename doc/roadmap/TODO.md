@@ -16,6 +16,11 @@ Aligned with Phase 3.2 completion
 - [ ] add CLI regression tests
 - [ ] add index stress test
 - [ ] add concurrent indexing test
+- [ ] brain explain
+- [ ] brain health
+- [ ] brain session
+- [ ] brain context --trace
+- [ ] runtime diagnostics
 
 ---
 

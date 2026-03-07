@@ -1,5 +1,7 @@
 # Runtime
-logs/
+kaobox-v2.9.tar.gz
+logs/*
+!logs/.gitkeep
 profiles/
 state/*
 !state/golden.version
@@ -7,6 +9,13 @@ state/*
 
 # Locks
 *.lock
+acquire_lock
+release_lock
+
+# SQLite runtime
+*.db
+*.db-wal
+*.db-shm
 
 # Temp
 *.bak

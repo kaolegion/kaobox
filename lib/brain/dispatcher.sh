@@ -1,4 +1,4 @@
- #!/usr/bin/env bash
+#!/usr/bin/env bash
 set -euo pipefail
 
 # ==========================================================
@@ -9,7 +9,6 @@ set -euo pipefail
 # ----------------------------------------------------------
 # Prevent double loading
 # ----------------------------------------------------------
-
 if [[ "${BASH_SOURCE[0]}" != "$0" ]]; then
     [[ -n "${BRAIN_DISPATCHER_LOADED:-}" ]] && return 0
     readonly BRAIN_DISPATCHER_LOADED=1
@@ -18,7 +17,6 @@ fi
 # ----------------------------------------------------------
 # Detect Root
 # ----------------------------------------------------------
-
 if [[ -z "${KAOBOX_ROOT:-}" ]]; then
     KAOBOX_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 fi
@@ -27,7 +25,6 @@ export KAOBOX_ROOT
 # ----------------------------------------------------------
 # Safe source helper
 # ----------------------------------------------------------
-
 safe_source() {
     local file="$1"
     [[ -f "$file" ]] || {
@@ -41,7 +38,6 @@ safe_source() {
 # ----------------------------------------------------------
 # Load Core (ORDER MATTERS)
 # ----------------------------------------------------------
-
 safe_source "$KAOBOX_ROOT/lib/brain/env.sh"
 safe_source "$KAOBOX_ROOT/core/logger.sh"
 safe_source "$KAOBOX_ROOT/lib/brain/preflight.sh"
@@ -52,9 +48,7 @@ safe_source "$KAOBOX_ROOT/lib/brain/renderer.sh"
 # ----------------------------------------------------------
 # Paths
 # ----------------------------------------------------------
-
 readonly COMMANDS_DIR="$KAOBOX_ROOT/lib/brain/commands"
-
 readonly MEMORY_QUERY="$MODULES_ROOT/memory/query.sh"
 readonly MEMORY_INDEX="$MODULES_ROOT/memory/index.sh"
 
@@ -66,12 +60,11 @@ readonly MEMORY_INDEX="$MODULES_ROOT/memory/index.sh"
 # ----------------------------------------------------------
 # Usage
 # ----------------------------------------------------------
-
 usage() {
 cat <<EOF
 🧠 KaoBox Brain CLI
 
-Usage:
+System:
   brain status
   brain doctor
 
@@ -84,19 +77,20 @@ Memory:
   brain reindex
 
 Context:
-  brain context <file>
+  brain context [--trace] <file>
   brain focus <file>
+  brain session
 
 Cognition:
   brain think <query>
 
 Graph:
   brain graph
-  brain backlinks
 
-Debug:
+Observability:
+  brain health
   brain stats
-  brain explain
+  brain explain [--trace] <query>
 
 EOF
 }
@@ -104,7 +98,6 @@ EOF
 # ----------------------------------------------------------
 # Command Loader
 # ----------------------------------------------------------
-
 load_command() {
     local file="$1"
     safe_source "$COMMANDS_DIR/$file"
@@ -113,11 +106,17 @@ load_command() {
 # ----------------------------------------------------------
 # Dispatcher
 # ----------------------------------------------------------
-
 brain_dispatch() {
 
     local cmd="${1:-help}"
-    [[ $# -gt 0 ]] && shift
+    shift || true
+
+    # ------------------------------------------------------
+    # Mode debug (deterministic, stderr)
+    # ------------------------------------------------------
+    if [[ "${KAOBOX_DEBUG:-0}" == "1" ]]; then
+        echo "[debug] cmd=$cmd args=$*" >&2
+    fi
 
     case "$cmd" in
 
@@ -130,6 +129,31 @@ brain_dispatch() {
         doctor)
             load_command "doctor.sh"
             cmd_doctor "$@"
+            ;;
+
+        # ---- Observability ----
+        health)
+            preflight_check
+            load_command "health.sh"
+            cmd_health "$@"
+            ;;
+
+        session)
+            preflight_check
+            load_command "session.sh"
+            cmd_session "$@"
+            ;;
+
+        stats)
+            preflight_check
+            load_command "stats.sh"
+            cmd_stats "$@"
+            ;;
+
+        explain)
+            preflight_check
+            load_command "explain.sh"
+            cmd_explain "$@"
             ;;
 
         # ---- Memory ----
@@ -190,25 +214,14 @@ brain_dispatch() {
             load_command "think.sh"
             cmd_think "$@"
             ;;
-            
-        stats)
-			preflight_check
-			load_command "stats.sh"
-            cmd_stats "$@"
+
+        # ---- Graph ----
+        graph)
+            preflight_check
+            load_command "graph.sh"
+            cmd_graph "$@"
             ;;
 
-		graph)
-		    preflight_check
-		    load_command "graph.sh"
-		    cmd_graph "$@"
-		    ;;
-
-		explain)
-		    preflight_check
-		    load_command "explain.sh"
-		    cmd_explain "$@"
-		    ;;    
-		
         help|--help|-h)
             usage
             ;;
@@ -220,12 +233,4 @@ brain_dispatch() {
             exit 1
             ;;
     esac
-
-# TODO: Ajout pour debug dans dispatcher command - brain
-# ----------------------------------------------------------
-# Mode debug - < Brain
-# ----------------------------------------------------------
-
-[[ "$KAOBOX_DEBUG" == 1 ]] && echo "[debug] command=$1"
-
 }

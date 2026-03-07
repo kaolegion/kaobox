@@ -11,7 +11,6 @@ readonly BRAIN_INDEX_LOADED=1
 # ----------------------------------------------------------
 # Environment validation (module must not exit shell)
 # ----------------------------------------------------------
-
 [[ -n "${BRAIN_DB:-}" ]] || {
     echo "[Memory][ERROR] BRAIN_DB not defined" >&2
     return 1
@@ -25,29 +24,33 @@ readonly BRAIN_INDEX_LOADED=1
 # ----------------------------------------------------------
 # Engine bootstrap
 # ----------------------------------------------------------
-
 BASE_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ENGINE="$BASE_DIR/engine"
 
+# shellcheck source=/dev/null
 source "$ENGINE/utils.sh"
+# shellcheck source=/dev/null
 source "$ENGINE/tx.sh"
+# shellcheck source=/dev/null
 source "$ENGINE/metadata.sh"
+# shellcheck source=/dev/null
 source "$ENGINE/fts.sh"
+# shellcheck source=/dev/null
 source "$ENGINE/tags.sh"
+# shellcheck source=/dev/null
 source "$ENGINE/links.sh"
+# shellcheck source=/dev/null
 source "$BASE_DIR/gc.sh"
 
 # ----------------------------------------------------------
 # Notes directory (respects env)
 # ----------------------------------------------------------
-
 : "${BRAIN_NOTES_DIR:=$NOTES_DIR}"
 readonly BRAIN_NOTES_DIR
 
 # ----------------------------------------------------------
 # SQLite wrapper
 # ----------------------------------------------------------
-
 _sqlite_index_exec() {
     sqlite3 -batch "$BRAIN_DB" -cmd ".timeout 5000"
 }
@@ -55,10 +58,13 @@ _sqlite_index_exec() {
 # ==========================================================
 # INDEX SINGLE NOTE
 # ==========================================================
-
 index_note() {
 
-    local file="$1"
+    local file="${1:-}"
+    [[ -n "$file" ]] || {
+        echo "[Memory][ERROR] Missing file path for index_note" >&2
+        return 1
+    }
 
     require_absolute "$file"
     require_file "$file"
@@ -73,7 +79,6 @@ index_note() {
         links_sql "$file" "$file"
 
         commit_tx
-
     } | _sqlite_index_exec || {
         echo "[Memory][ERROR] Index transaction failed: $file" >&2
         return 1
@@ -85,12 +90,12 @@ index_note() {
 # ==========================================================
 # BATCH REINDEX
 # ==========================================================
-
 reindex_all() {
 
     local files=("$@")
     [[ ${#files[@]} -eq 0 ]] && return 0
 
+    local file
     {
         begin_tx
 
@@ -108,7 +113,6 @@ reindex_all() {
         gc_sql "$BRAIN_NOTES_DIR"
 
         commit_tx
-
     } | _sqlite_index_exec || {
         echo "[Memory][ERROR] Batch reindex failed" >&2
         return 1

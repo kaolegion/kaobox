@@ -22,19 +22,18 @@ readonly BRAIN_CONTEXT_SCORER_LOADED=1
 # Load local dependencies (same layer only)
 # ----------------------------------------------------------
 CONTEXT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=/dev/null
 source "$CONTEXT_DIR/session.sh"
 
 # ==========================================================
 # Function: score_context
 # ==========================================================
-
 score_context() {
 
     declare -A scores
-    declare -A last_update
 
     local now
-    now=$(date +%s)
+    now="$(date +%s)"
 
     while IFS="|" read -r path layer updated_at; do
         [[ -z "${path:-}" ]] && continue
@@ -52,7 +51,7 @@ score_context() {
 
         (( base == 0 )) && continue
 
-        local current=${scores["$path"]:-0}
+        local current="${scores["$path"]:-0}"
         local decay=100
 
         # --------------------------------------------------
@@ -60,39 +59,43 @@ score_context() {
         # --------------------------------------------------
         if [[ -n "${updated_at:-}" ]]; then
             local updated
-            updated=$(date -d "$updated_at" +%s 2>/dev/null || echo 0)
+            updated="$(date -d "$updated_at" +%s 2>/dev/null || echo 0)"
 
             if (( updated > 0 )); then
-                local age_days=$(( (now - updated) / 86400 ))
+                local age_days
+                age_days=$(( (now - updated) / 86400 ))
 
-                if   (( age_days <= 1 ));  then decay=100
-                elif (( age_days <= 7 ));  then decay=70
-                elif (( age_days <= 30 )); then decay=40
-                else                            decay=20
+                if (( age_days <= 1 )); then
+                    decay=100
+                elif (( age_days <= 7 )); then
+                    decay=70
+                elif (( age_days <= 30 )); then
+                    decay=40
+                else
+                    decay=20
                 fi
             fi
         fi
 
-        local weighted=$(( base * decay / 100 ))
+        local weighted
+        weighted=$(( base * decay / 100 ))
 
         scores["$path"]=$(( current + weighted ))
-        last_update["$path"]="$updated_at"
-
     done
 
     # ------------------------------------------------------
     # Session Boost
     # ------------------------------------------------------
-    local active
-    active=$(session_get_active || true)
+    local active=""
+    active="$(session_get_active || true)"
 
     for path in "${!scores[@]}"; do
-        local total=${scores[$path]}
+        local total="${scores[$path]}"
 
         if [[ -n "${active:-}" && "$path" == "$active" ]]; then
             total=$(( total + 5 ))
         fi
 
         printf "%s|%s\n" "$total" "$path"
-    done | sort -t'|' -nr
+    done | sort -t'|' -k1,1nr -k2,2
 }
