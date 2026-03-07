@@ -39,11 +39,12 @@ links_sql() {
     # Remove existing outgoing links for this source note
     echo "DELETE FROM links WHERE source_id = $source_id;"
 
-    local target
+    local target target_base
     while IFS= read -r target; do
         [[ -z "${target:-}" ]] && continue
 
         target="$(sql_escape "$target")"
+        target_base="$(printf "%s" "$target" | sed -E 's/\.md$//')"
 
         cat <<SQL
 INSERT INTO links(source_id, target_id)
@@ -51,7 +52,12 @@ SELECT
     $source_id,
     id
 FROM notes
-WHERE title='$target';
+WHERE lower(title) = lower('$target')
+   OR lower(title) = lower('$target_base')
+   OR lower(path) LIKE '%/' || lower('$target')
+   OR lower(path) LIKE '%/' || lower('$target') || '.md'
+   OR lower(path) LIKE '%/' || lower('$target_base') || '.md'
+LIMIT 1;
 SQL
 
     done < <(extract_links "$file")
