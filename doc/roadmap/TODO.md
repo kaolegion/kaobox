@@ -1,7 +1,7 @@
 # KaoBox TODO
 
 Version: v2.9  
-Aligned with Phase 3.4 completion
+Aligned with Phase 3.6 completion
 
 ---
 
@@ -36,9 +36,7 @@ Goal achieved: exploit the note graph for contextual navigation.
 - [x] Graph navigation test suite
 - [x] CLI graph smoke coverage
 
-Outcome:
-
-Graph is now a first-class navigation surface in Brain.
+Outcome : Graph is now a **first-class navigation surface** in Brain.
 
 ---
 
@@ -50,49 +48,63 @@ to active cognitive ranking signal.
 - [x] Graph proximity query API (`query_graph_proximity_by_note`)
 - [x] Graph context expansion in Think Engine
 - [x] Graph proximity boost in ranking model
-- [x] Composite ranking model implemented:
-      normalized_fts + focus_boost + graph_boost
+- [x] Composite ranking model implemented : 
+normalized_fts + focus_boost + graph_boost
+
 - [x] Deterministic integration with existing ranking pipeline
 - [x] Test suite additions:
-      - `test_graph_proximity.sh`
-      - `test_think_graph_boost.sh`
+  - `test_graph_proximity.sh`
+  - `test_think_graph_boost.sh`
 - [x] CLI smoke test extended with `brain think`
 
-Outcome :
+Outcome:
+
 The markdown graph is now used as a **cognitive relevance signal**
 in addition to navigation.
 
 ---
 
-# Phase 3.6 — Graph Expansion
+# DONE (Phase 3.6 — Graph Export)
 
-Goal: extend the Brain graph beyond navigation and cognition.
+Goal achieved: expose the Brain graph as a deterministic export surface.
 
----
-
-## DONE (Graph Export Groundwork)
+## Export Layer
 
 - [x] Canonical graph export module (`modules/memory/export.sh`)
 - [x] Deterministic edge export (`export_graph_edges_tsv`)
 - [x] Read-only export layer
 - [x] Deterministic ordering guarantees
+
+## CLI Exposure
+
+- [x] `brain export graph`
+- [x] `brain export graph --format tsv`
+- [x] CLI orchestration-only implementation
+
+## Tests
+
 - [x] Export validation test (`test_graph_export.sh`)
-- [x] Integration into full test suite
+- [x] Export CLI integration test (`test_graph_export_cli.sh`)
+- [x] CLI smoke test updated
+- [x] Global test suite updated
 
 Outcome:
 
 KaoBox now exposes a **deterministic graph export surface**
-that external tools can consume.
+accessible through the Brain CLI and reusable by external tools.
 
 ---
 
-## Immediate (Graph Expansion)
+# Phase 3.7 — Graph Expansion
+
+Goal: deepen graph exploitation beyond export.
+
+## Planned
 
 - [ ] Configurable graph weighting
 - [ ] Path-aware context expansion
 - [ ] Related notes command based on graph distance
-- [ ] Graph export CLI interface
-- [ ] Stronger ambiguous note resolution policyy
+- [ ] Stronger ambiguous note resolution policy
 
 ---
 
@@ -130,8 +142,7 @@ that external tools can consume.
 
 # Architectural Constraint Reminder
 
-All future work must:
-
+All future work must :
 - Preserve Core determinism
 - Maintain module isolation
 - Avoid hidden state

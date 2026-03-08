@@ -3,7 +3,6 @@
 KaoBox is a modular deterministic cognitive system for Linux.
 
 It implements a **deterministic brain runtime** designed to manage :
-
 - knowledge
 - notes
 - projects
@@ -20,11 +19,9 @@ Root path :
 # Brain CLI
 
 Main entrypoint :
-
 > brain <command>
 
 Examples :
-
 brain status  
 brain search "query"  
 brain think "query"  
@@ -32,14 +29,14 @@ brain graph test
 brain backlinks test  
 brain neighbors test  
 brain path test-modular test  
+brain export graph  
 brain reindex
 
 ---
 
 # Architecture
 
-Main layers:
-
+Main layers :
 - `core/` → deterministic infrastructure
 - `lib/brain/` → cognitive runtime
 - `modules/` → domain engines
@@ -53,12 +50,12 @@ Main layers:
 
 Track: **v2.9**
 
-Current phase:  
-**Phase 3.6 — Graph Export (Groundwork)**
+Current phase :
+**Phase 3.6 — Graph Export (CLI Exposure)**
 
 ## Delivered capabilities
 
-Memory engine :
+### Memory engine
 
 - transactional indexing
 - FTS5 retrieval
@@ -66,7 +63,7 @@ Memory engine :
 - markdown link graph extraction
 - deterministic rebuild
 
-Graph layer :
+### Graph layer
 
 - graph navigation
 - backlinks
@@ -74,14 +71,13 @@ Graph layer :
 - path traversal (BFS)
 - graph proximity queries
 
-Think engine :
+### Think engine
 
 - context-aware ranking
 - focus-aware search
 - graph-aware ranking
 
 Ranking model :
-
 composite = normalized_fts + focus_boost + graph_boost
 
 ---
@@ -97,64 +93,66 @@ These commands operate on the indexed markdown graph stored in the memory engine
 
 ---
 
-# Graph Export (Phase 3.6 groundwork)
+# Graph Export
 
-KaoBox now provides a **canonical graph export layer** implemented in:
+KaoBox provides a **deterministic graph export surface**.
 
+### CLI
+
+brain export graph
+brain export graph --format tsv
+
+### Implementation
+
+Export logic is implemented in :
 modules/memory/export.sh
 
-Current export capability:
-
+Current canonical export :
 export_graph_edges_tsv
 
-Output format:
 
+### Output format
 source_path<TAB>target_path
 
-Properties:
+### Properties
 
-- read-only
+- read-only export
 - deterministic ordering
-- module-owned graph extraction
-- reusable foundation for visualization tools
+- module-owned implementation
+- CLI remains orchestration-only
 
-This export layer is designed to support future integrations such as:
+This export layer is designed to support future integrations such as :
 
 - Graphviz
 - JSON graph export
 - visual graph exploration
 - timeline visualization systems
 
-CLI exposure will be introduced in a later step.
-
 ---
 
 # Testing
 
 Run the full test suite :
-
 ./tests/run_all.sh
 
 Expected result :
-
 [SUCCESS] All tests passed
 
-The test suite validates:
-
+The test suite validates :
 - logger infrastructure
 - memory indexing
 - graph navigation
 - graph proximity
 - graph-aware ranking
 - graph export determinism
+- graph export CLI surface
 - CLI smoke commands
 
 ---
 
 # Principles
 
-KaoBox follows strict engineering principles:
-
+KaoBox follows strict engineering principles :
 - deterministic core
 - modular isolation
 - explicit state
@@ -168,8 +166,7 @@ KaoBox follows strict engineering principles:
 
 KaoBox is not only a note system.
 
-It is a **deterministic cognitive infrastructure** designed to evolve toward:
-
+It is a **deterministic cognitive infrastructure** designed to evolve toward :
 - graph-aware cognition
 - temporal memory
 - cognitive session engines

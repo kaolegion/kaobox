@@ -1,7 +1,7 @@
 # KaoBox Test Protocol
 
 Version: v2.9  
-Aligned with Phase 3.6 graph export groundwork
+Aligned with Phase 3.6 graph export CLI surface
 
 A version can be validated only if all checks pass.
 
@@ -63,7 +63,7 @@ brain backlinks <note>
 brain neighbors <note>
 brain path <a> <b>
 query_graph_proximity_by_note <note_id>
-sqlite3 brain.db "SELECT COUNT(*) FROM links;"
+sqlite3 "$BRAIN_DB" "SELECT COUNT(*) FROM links;"
 
 Expected :
 - FTS rows == notes count
@@ -98,17 +98,24 @@ sqlite3 brain.db "SELECT COUNT(*) FROM links;"
 The Brain graph must be exportable in a deterministic and reproducible way.
 
 Checks :
+
 - Graph edges can be exported from the memory module
 - Export layer remains read-only
 - Export ordering is deterministic
 - Export output remains stable across repeated runs
 - Export does not mutate the database
 - Export works even when the Brain contains additional unrelated notes
+- CLI export command dispatches correctly
 
 Verification :
+
 export_graph_edges_tsv
 
+brain export graph  
+brain export graph --format tsv
+
 Expected :
+
 - output format:
   source_path<TAB>target_path
 - deterministic ordering
@@ -255,5 +262,6 @@ Which includes :
 - test_graph_path.sh
 - test_graph_proximity.sh
 - test_graph_export.sh
+- test_graph_export_cli.sh
 - test_think_graph_boost.sh
 - test_brain_cli.sh

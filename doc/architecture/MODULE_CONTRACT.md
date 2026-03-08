@@ -4,10 +4,10 @@
 
 This document defines how modules interact with the KaoBox Core.
 
-Modules extend the system.
+Modules extend the system.  
 They must never modify or weaken the Core.
 
-The Core remains deterministic.
+The Core remains deterministic.  
 Modules provide business logic.
 
 ---
@@ -15,7 +15,7 @@ Modules provide business logic.
 # Architectural Principle
 
 Core = Infrastructure  
-Modules = Engines  
+Modules = Engines
 
 Separation is mandatory.
 
@@ -24,34 +24,37 @@ Separation is mandatory.
 # Location
 
 All modules must reside in :
-`/opt/kaobox/modules/<module_name>/`
+/opt/kaobox/modules/<module_name>/
 
 Example :
-`/opt/kaobox/modules/memory/`
+/opt/kaobox/modules/memory/
+
 
 ---
 
 # Required Structure
 
 Each module must contain :
-- init.sh        → initialization entrypoint
-- index.sh       → public module entry
-- query.sh       → public query interface (graph, search, traversal, etc.)
+- `init.sh` → initialization entrypoint
+- `index.sh` → indexing / ingestion interface
+- `query.sh` → public query interface
 
 Recommended structure :
 module/
-├── engine/      → low-level logic
-├── context/     → adaptive logic (if applicable)
+├── engine/ → low-level logic
+├── context/ → adaptive logic (optional)
 ├── init.sh
 ├── index.sh
 ├── query.sh
+├── export.sh → external export surface (optional)
 └── gc.sh
 
-Modules must explicitly expose their public interface.
+
+Modules must explicitly expose their **public interface**.
 
 ---
 
-## Core Responsibilities
+# Core Responsibilities
 
 Core is responsible for :
 - Environment bootstrap
@@ -74,20 +77,20 @@ Core must remain :
 
 ---
 
-## Allowed Interactions
+# Allowed Interactions
 
 Modules MAY :
-Modules SHOULD prefer SQL emission patterns when interacting
-with the persistence layer. Execution orchestration is handled
-by higher-level runtime components.
-
 - Use Core logging utilities
-- Read from state/
-- Write to logs/
+- Read from `state/`
+- Write to `logs/`
 - Use defined environment variables
 - Persist their own data
+- Maintain their own SQLite schema
 - Register CLI commands through the dispatcher layer
-- Maintain their own internal SQLite schema
+
+Modules SHOULD prefer **SQL emission patterns** when interacting with the persistence layer.
+
+Execution orchestration must remain in the runtime layer.
 
 Modules MAY implement :
 - Adaptive ranking
@@ -95,42 +98,81 @@ Modules MAY implement :
 - Graph logic
 - Business-specific storage
 - Traversal/query primitives
+- Export surfaces for external systems
 
 ---
 
-## Forbidden Interactions
+# Forbidden Interactions
 
 Modules must NOT :
-- Modify core/
-- Modify base/
-- Override bin/brain
-- Directly alter golden.version
+- Modify `core/`
+- Override `bin/brain`
 - Modify other modules
+- Directly alter `golden.version`
 - Depend on undocumented global variables
 
 Core integrity is non-negotiable.
 
 ---
 
-## CLI Separation Rule
+# CLI Separation Rule
 
-CLI layer (lib/brain/commands/) must :
+The CLI layer (`lib/brain/commands/`) must :
 - Validate arguments
 - Call module interfaces
-- Not contain business logic
+- Never contain business logic
 
 Modules must expose callable functions.
-CLI must orchestrate, not compute.
+
+CLI must **orchestrate**, not compute.
 
 This rule applies especially to :
 - SQL access
-- graph traversal
-- ranking logic
-- state mutation rules
+- Graph traversal
+- Ranking logic
+- Export logic
+- State mutation
 
 ---
 
-## Isolation Rule
+# Module API Rule
+
+Modules must expose explicit functions that serve as **public module APIs**.
+
+Example :
+
+Memory module exports :
+index_note
+query_notes
+query_graph_neighbors
+query_graph_path
+export_graph_edges_tsv
+
+
+The Brain runtime may call these APIs, but must not replicate their internal logic.
+
+---
+
+# Graph Export Rule
+
+Graph extraction and export logic must remain **module-owned**.
+
+Example implementation : modules/memory/export.sh
+
+CLI exposure :
+brain export graph
+brain export graph --format tsv
+
+The CLI must only dispatch to module functions.
+
+This ensures :
+- deterministic exports
+- reusable graph pipelines
+- separation of concerns
+
+---
+
+# Isolation Rule
 
 Modules must :
 - Be self-contained
@@ -142,14 +184,14 @@ If a module crashes, Core must remain operational.
 
 ---
 
-## Determinism Rule
+# Determinism Rule
 
 Core is deterministic.
 
 Modules may introduce adaptive behavior,
-but only inside their isolated engine.
+but only inside their isolated engines.
 
-Example :
+Examples :
 - Context ranking
 - Temporal decay
 - Session boosting
@@ -159,13 +201,13 @@ These must never compromise Core stability.
 
 ---
 
-## Hook System (Future Extension)
+# Hook System (Future Extension)
 
 Planned standard hooks :
-- on_init
-- on_before_execute
-- on_after_execute
-- on_shutdown
+- `on_init`
+- `on_before_execute`
+- `on_after_execute`
+- `on_shutdown`
 
 Hooks must be :
 - Explicitly registered
@@ -176,7 +218,7 @@ Core must function without any module installed.
 
 ---
 
-## Data Ownership Rule
+# Data Ownership Rule
 
 Each module owns :
 - Its database schema
@@ -184,6 +226,7 @@ Each module owns :
 - Its ranking model
 - Its internal cache
 - Its graph query API
+- Its export surfaces
 - Its public query API
 
 Core owns :
@@ -193,7 +236,7 @@ Core owns :
 
 ---
 
-## Failure Model
+# Failure Model
 
 Modules must :
 - Fail explicitly
@@ -205,9 +248,9 @@ Graceful degradation is mandatory.
 
 ---
 
-## Extension Philosophy
+# Extension Philosophy
 
-### Modules are engines.
+Modules are engines.
 
 They may introduce :
 - Intelligence
@@ -215,12 +258,13 @@ They may introduce :
 - Learning
 - Ranking
 - Traversal
+- External export pipelines
 
 But never structural instability.
 
 ---
 
-## Contract Summary
+# Contract Summary
 
 Core :
 - Deterministic

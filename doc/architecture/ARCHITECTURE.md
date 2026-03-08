@@ -51,7 +51,7 @@ Responsibilities :
 - Localization
 - Deterministic runtime configuration
 
-Rules:
+Rules :
 
 Core must :
 - Never depend on modules
@@ -67,8 +67,7 @@ Core = infrastructure only.
 Directory :
 `lib/brain/`
 
-Components:
-
+Components :
 - dispatcher.sh
 - commands/
 - context/
@@ -80,8 +79,7 @@ Components:
 
 This layer implements the **cognitive runtime**.
 
-Responsibilities:
-
+Responsibilities :
 - command dispatch
 - context resolution
 - ranking logic
@@ -92,7 +90,7 @@ Responsibilities:
 
 ## Context Engine
 
-Location:
+Location :
 `lib/brain/context/`
 
 Components :
@@ -100,43 +98,48 @@ Components :
 - scorer.sh
 - session.sh
 
-Purpose:
+Purpose :
 Build contextual signals for ranking.
 
 ### Context Layers
+
 - SELF
 - GRAPH_OUT
 - GRAPH_IN
 - RECENT
 
 ### Ranking Model
+
 Score =
-(Layer Weight × Temporal Decay)
+
+(Layer Weight × Temporal Decay)  
 + Session Boost
 
 ---
 
 ## Think Engine
 
-Location:
+Location :
 `lib/brain/think/`
 
 Components :
 - engine.sh
 - ranker.sh
 
-Purpose:
+Purpose :
 Composite retrieval and ranking.
 
-Dependencies:
+Dependencies :
 - memory/query.sh
 - context/session.sh
 
 Ranking formula :
 composite_score =
 normalized_fts
-+ focus_boost
-+ graph_boost
+
+focus_boost
+
+graph_boost
 
 ---
 
@@ -158,21 +161,22 @@ Location :
 `modules/memory/`
 
 Structure :
-
 memory/
 ├── engine/
-│   ├── utils.sh
-│   ├── metadata.sh
-│   ├── fts.sh
-│   ├── tags.sh
-│   ├── links.sh
-│   └── tx.sh
+│ ├── utils.sh
+│ ├── metadata.sh
+│ ├── fts.sh
+│ ├── tags.sh
+│ ├── links.sh
+│ └── tx.sh
 ├── index.sh
 ├── query.sh
 ├── gc.sh
-└── init.sh
+├── init.sh
+└── export.sh
 
-### Features :
+### Features
+
 - SQLite WAL
 - FTS5 search
 - transactional indexing
@@ -182,19 +186,22 @@ memory/
 - graph adjacency queries
 - deterministic path traversal support
 
-### Modules must :
+### Modules must
+
 - remain isolated
 - not mutate core
 - expose explicit interfaces
 
+---
+
 ## Graph Model
 
-The memory module persists explicit graph relations in the links table.
+The memory module persists explicit graph relations in the `links` table.
 
-Graph capabilities now include :
+Graph capabilities include :
 - outgoing link inspection
 - backlinks inspection
-- direct neighbors inspection
+- neighbor inspection
 - path traversal over indexed markdown links
 - graph proximity queries
 
@@ -217,22 +224,35 @@ Provide a **canonical deterministic export surface** for the Brain graph.
 Current export capability :
 - `export_graph_edges_tsv`
 
-Output format:
-
+Output format :
 source_path<TAB>target_path
 
-Design properties :
+Design properties:
 - read-only
 - deterministic ordering
 - module-owned graph extraction
 - reusable export foundation
 
-Architectural rule :
-Graph export logic **must remain inside the memory module**.
+### CLI Exposure
 
-The CLI must remain orchestration-only and must not duplicate graph extraction logic.
+The export layer is exposed through the Brain CLI :
+brain export graph
+brain export graph --format tsv
 
-Future renderers may include :
+Architectural rule:
+
+Graph extraction logic **must remain inside the memory module**.
+
+The CLI must remain **orchestration-only** and must not duplicate export logic.
+
+This separation ensures that :
+- modules own business logic
+- the CLI remains a thin orchestration layer
+- deterministic behavior is preserved
+
+### Future renderers
+
+Possible downstream integrations :
 - JSON graph export
 - Graphviz DOT export
 - visualization pipelines
@@ -245,13 +265,13 @@ This layer allows KaoBox to expose its internal knowledge graph to external syst
 ## Layer 4 — CLI Interface
 
 Directory :
-> bin/
+`bin/`
 
-### Components :
+Component :
 - bin/brain
 - bin/kaobox-shell
 
-### The CLI :
+The CLI :
 - parses user commands
 - invokes the brain dispatcher
 - never accesses the database directly as business logic owner
@@ -260,10 +280,10 @@ Directory :
 
 ## Layer 5 — Runtime State
 
-### Directory :
-> state/
+Directory :
+`state/`
 
-### Contains :
+Contains :
 - version state
 - language state
 - runtime flags
@@ -274,44 +294,45 @@ Mutable by design.
 
 ## Layer 6 — Documentation
 
-### Directory :
-> doc/
+Directory :
+`doc/`
 
-### Contains :
+Contains :
 - architecture
 - roadmap
 - phase history
 - agent specifications
 - test protocols
 
-Documentation is considered part of the system contract.
+Documentation is considered part of the **system contract**.
 
 ---
 
 ## Brain Graph Surface
 
-### Current graph-facing commands :
-- brain graph <note>
-- brain backlinks <note>
-- brain neighbors <note>
-- brain path <from_note> <to_note>
+Current graph-facing commands :
+> brain graph <note>
+> brain backlinks <note>
+> brain neighbors <note>
+> brain path <from_note> <to_note>
+> brain export graph
 
-These commands rely on the memory module graph query API, while the CLI remains orchestration-only.
+These commands rely on the memory module graph APIs while the CLI remains orchestration-only.
 
 ---
 
 ## Think Pipeline
 
-User Query
-↓
-FTS Query (modules/memory/query.sh)
-↓
-Think Engine (lib/brain/think/engine.sh)
-↓
-Ranker
-↓
-Renderer
-↓
+User Query  
+↓  
+FTS Query (`modules/memory/query.sh`)  
+↓  
+Think Engine (`lib/brain/think/engine.sh`)  
+↓  
+Ranker  
+↓  
+Renderer  
+↓  
 CLI Output
 
 ---
@@ -331,7 +352,7 @@ CLI Output
 
 KaoBox is not a workspace.
 
-It is a programmable cognitive kernel.
+It is a programmable **cognitive kernel**.
 
 Where most systems optimize UI, KaoBox optimizes structured cognition.
 
@@ -343,9 +364,16 @@ Where most systems optimize UI, KaoBox optimizes structured cognition.
 - reinforcement signals
 - agent orchestration layer
 
+---
+
 ## Status
 
-Phase 3.6 — Graph Export (Groundwork)
+Phase 3.6 — Graph Export (CLI Surface)
 
-System Status:
-Stable Cognitive Kernel with Graph Traversal, Graph-Aware Ranking, and Deterministic Graph Export Foundation.
+System Status :
+
+Stable cognitive kernel with :
+- deterministic memory engine
+- graph traversal capabilities
+- graph-aware ranking
+- deterministic graph export exposed through CLI

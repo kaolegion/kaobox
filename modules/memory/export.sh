@@ -16,20 +16,28 @@ set -euo pipefail
 #   source_path<TAB>target_path
 # ==========================================================
 
-[[ -n "${BRAIN_EXPORT_LOADED:-}" ]] && return 0
-readonly BRAIN_EXPORT_LOADED=1
+# ----------------------------------------------------------
+# Prevent double loading when sourced
+# ----------------------------------------------------------
+if [[ "${BASH_SOURCE[0]}" != "$0" ]]; then
+    [[ -n "${BRAIN_EXPORT_LOADED:-}" ]] && return 0
+    readonly BRAIN_EXPORT_LOADED=1
+fi
 
 # ----------------------------------------------------------
-# Environment validation
+# Internal validation
 # ----------------------------------------------------------
-[[ -n "${BRAIN_DB:-}" ]] || {
-    echo "[Export] BRAIN_DB not defined" >&2
-    return 1
-}
+_export_require_db() {
 
-[[ -f "$BRAIN_DB" ]] || {
-    echo "[Export] Database not found: $BRAIN_DB" >&2
-    return 1
+    [[ -n "${BRAIN_DB:-}" ]] || {
+        echo "[Export] BRAIN_DB not defined" >&2
+        return 1
+    }
+
+    [[ -f "$BRAIN_DB" ]] || {
+        echo "[Export] Database not found: $BRAIN_DB" >&2
+        return 1
+    }
 }
 
 # ----------------------------------------------------------
@@ -52,19 +60,12 @@ _sqlite_export_exec() {
 # ----------------------------------------------------------
 export_graph_edges_tsv() {
 
-    [[ -n "${BRAIN_DB:-}" ]] || {
-        echo "[Export] BRAIN_DB not defined" >&2
-        return 1
-    }
-
-    [[ -f "$BRAIN_DB" ]] || {
-        echo "[Export] Database not found: $BRAIN_DB" >&2
-        return 1
-    }
+    _export_require_db || return 1
 
     _sqlite_export_exec <<'SQL'
-SELECT src.path,
-       tgt.path
+SELECT
+    src.path,
+    tgt.path
 FROM links l
 JOIN notes src ON src.id = l.source_id
 JOIN notes tgt ON tgt.id = l.target_id
@@ -79,16 +80,10 @@ SQL
 # ----------------------------------------------------------
 export_graph_edge_count() {
 
-    [[ -n "${BRAIN_DB:-}" ]] || {
-        echo "[Export] BRAIN_DB not defined" >&2
-        return 1
-    }
+    _export_require_db || return 1
 
-    [[ -f "$BRAIN_DB" ]] || {
-        echo "[Export] Database not found: $BRAIN_DB" >&2
-        return 1
-    }
-
-    sqlite3 -batch -noheader "$BRAIN_DB" \
-        "SELECT COUNT(*) FROM links;"
+    sqlite3 -batch -noheader "$BRAIN_DB" <<'SQL'
+SELECT COUNT(*)
+FROM links;
+SQL
 }

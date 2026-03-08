@@ -236,35 +236,50 @@ to **graph-aware cognition**.
 
 ---
 
-## Phase 3.6 — Graph Export (Groundwork) ✅
+## Phase 3.6 — Graph Export (CLI Surface) ✅
 
 Date : 2026-03-08
 
 Delivered :
 
+### Export Layer
+
 - canonical graph export module (`modules/memory/export.sh`)
 - deterministic graph edge export (`export_graph_edges_tsv`)
 - read-only graph export layer
 - deterministic ordering guarantees
-- export validation test:
-  - `test_graph_export.sh`
-- integration into the full test suite
 
 Export format :
 
 source_path<TAB>target_path
 
+### CLI Exposure
+
+- `brain export graph`
+- `brain export graph --format tsv`
+- CLI remains orchestration-only
+- export logic remains module-owned
+
+### Test Coverage
+
+- export validation test:
+  - `test_graph_export.sh`
+- CLI export integration test:
+  - `test_graph_export_cli.sh`
+- CLI smoke test extended
+- global test suite updated
+
 Architectural Impact :
 
 - Introduced a canonical graph export surface
 - Export responsibility remains inside the memory module
+- CLI exposes export without duplicating logic
 - External tools can consume the Brain graph deterministically
-- No duplication of graph extraction logic in CLI
 
 Impact :
 
 KaoBox now exposes its internal knowledge graph
-to external systems through a **deterministic export interface**.
+through a **deterministic CLI-accessible export interface**.
 
 ---
 
@@ -319,8 +334,12 @@ Context Engine: Operational
 Observability: Integrated  
 Graph Navigation: Integrated  
 Graph Cognition: Integrated  
-Graph Export: Deterministic foundation implemented  
+Graph Export: CLI surface implemented  
 Agent Layer: Emerging  
 
 KaoBox has transitioned from a structural system
-to a **deterministic cognitive infrastructure** with explicit graph traversal.
+to a **deterministic cognitive infrastructure** capable of:
+
+- contextual retrieval
+- graph-aware reasoning
+- deterministic graph export

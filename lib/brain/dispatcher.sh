@@ -2,7 +2,7 @@
 set -euo pipefail
 
 # ==========================================================
-# KaoBox Brain - CLI Dispatcher (Kernel v3.0)
+# KaoBox Brain - CLI Dispatcher (Kernel v3.1)
 # Deterministic • Modular • Safe
 # ==========================================================
 
@@ -27,10 +27,12 @@ export KAOBOX_ROOT
 # ----------------------------------------------------------
 safe_source() {
     local file="$1"
+
     [[ -f "$file" ]] || {
         echo "Fatal: missing file $file"
         exit 1
     }
+
     # shellcheck source=/dev/null
     source "$file"
 }
@@ -51,9 +53,23 @@ safe_source "$KAOBOX_ROOT/lib/brain/renderer.sh"
 readonly COMMANDS_DIR="$KAOBOX_ROOT/lib/brain/commands"
 readonly MEMORY_QUERY="$MODULES_ROOT/memory/query.sh"
 readonly MEMORY_INDEX="$MODULES_ROOT/memory/index.sh"
+readonly MEMORY_EXPORT="$MODULES_ROOT/memory/export.sh"
 
+# ----------------------------------------------------------
+# Required module checks
+# ----------------------------------------------------------
 [[ -f "$MEMORY_QUERY" ]] || {
     echo "Fatal: missing memory query module"
+    exit 1
+}
+
+[[ -f "$MEMORY_INDEX" ]] || {
+    echo "Fatal: missing memory index module"
+    exit 1
+}
+
+[[ -f "$MEMORY_EXPORT" ]] || {
+    echo "Fatal: missing memory export module"
     exit 1
 }
 
@@ -61,7 +77,7 @@ readonly MEMORY_INDEX="$MODULES_ROOT/memory/index.sh"
 # Usage
 # ----------------------------------------------------------
 usage() {
-cat <<EOF
+cat <<'EOF'
 🧠 KaoBox Brain CLI
 
 System:
@@ -90,6 +106,10 @@ Graph:
   brain neighbors <note>
   brain path <from_note> <to_note>
 
+Export:
+  brain export graph
+  brain export graph --format tsv
+
 Observability:
   brain health
   brain stats
@@ -115,7 +135,7 @@ brain_dispatch() {
     shift || true
 
     # ------------------------------------------------------
-    # Mode debug (deterministic, stderr)
+    # Debug mode (deterministic, stderr)
     # ------------------------------------------------------
     if [[ "${KAOBOX_DEBUG:-0}" == "1" ]]; then
         echo "[debug] cmd=$cmd args=$*" >&2
@@ -123,7 +143,9 @@ brain_dispatch() {
 
     case "$cmd" in
 
-        # ---- System ----
+        # --------------------------------------------------
+        # System
+        # --------------------------------------------------
         status)
             load_command "status.sh"
             cmd_status "$@"
@@ -134,7 +156,9 @@ brain_dispatch() {
             cmd_doctor "$@"
             ;;
 
-        # ---- Observability ----
+        # --------------------------------------------------
+        # Observability
+        # --------------------------------------------------
         health)
             preflight_check
             load_command "health.sh"
@@ -159,7 +183,9 @@ brain_dispatch() {
             cmd_explain "$@"
             ;;
 
-        # ---- Memory ----
+        # --------------------------------------------------
+        # Memory
+        # --------------------------------------------------
         new)
             preflight_check
             load_command "new.sh"
@@ -198,7 +224,9 @@ brain_dispatch() {
             cmd_fuzzy "$@"
             ;;
 
-        # ---- Context Layer ----
+        # --------------------------------------------------
+        # Context
+        # --------------------------------------------------
         context)
             preflight_check
             load_command "context.sh"
@@ -211,14 +239,18 @@ brain_dispatch() {
             cmd_focus "$@"
             ;;
 
-        # ---- Cognitive Layer ----
+        # --------------------------------------------------
+        # Cognition
+        # --------------------------------------------------
         think)
             preflight_check
             load_command "think.sh"
             cmd_think "$@"
             ;;
 
-        # ---- Graph ----
+        # --------------------------------------------------
+        # Graph
+        # --------------------------------------------------
         graph)
             preflight_check
             safe_source "$MEMORY_QUERY"
@@ -247,6 +279,16 @@ brain_dispatch() {
             cmd_path "$@"
             ;;
 
+        # --------------------------------------------------
+        # Export
+        # --------------------------------------------------
+        export)
+            preflight_check
+            safe_source "$MEMORY_EXPORT"
+            load_command "export.sh"
+            cmd_export "$@"
+            ;;
+
         help|--help|-h)
             usage
             ;;
@@ -259,4 +301,3 @@ brain_dispatch() {
             ;;
     esac
 }
-	
