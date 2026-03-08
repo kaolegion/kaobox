@@ -7,8 +7,8 @@ Each phase represents a structural evolution of the system.
 
 # Phase 1 — Structural Foundation ✅
 
-Version: v1.0.0-alpha  
-Status: COMPLETED
+Version : v1.0.0-alpha  
+Status : COMPLETED
 
 ## Scope
 
@@ -37,9 +37,9 @@ Status: COMPLETED
 
 # Phase 2 — Production Hardening (Brain v2.8) ✅
 
-Version: v2.8  
-Status: COMPLETED  
-Branch: release/brain-v2.8
+Version : v2.8  
+Status : COMPLETED  
+Branch : release/brain-v2.8
 
 ## Scope
 
@@ -81,10 +81,9 @@ Phase 2 marks the stabilization of the infrastructure layer.
 
 # Phase 3 — Operational Intelligence (v2.9)
 
-Status: ACTIVE
+Status : ACTIVE
 
-Goal:
-
+Goal :
 Build structured operational intelligence
 on top of hardened infrastructure.
 
@@ -92,44 +91,38 @@ on top of hardened infrastructure.
 
 ## Phase 3.1 — CLI Stabilization ✅
 
-Delivered:
-
+Delivered :
 - Command normalization
 - Deterministic CLI dispatcher
 - Separation between CLI and business logic
 - Shell integration
 - Completion system
 
-Impact:
-
+Impact :
 CLI became a thin orchestration layer.
 
 ---
 
 ## Phase 3.2 — Context & Think Engine ✅
 
-Location:
-
+Location :
 lib/brain/context/  
 lib/brain/think/
 
 ### Context Engine
 
-Components:
-
+Components :
 - resolver.sh
 - scorer.sh
 - session.sh
 
-Delivered:
-
+Delivered :
 - Context resolver
 - Layered context model
 - Temporal decay scoring
 - Session focus persistence
 
-Context Layers:
-
+Context Layers :
 - SELF
 - GRAPH_OUT
 - GRAPH_IN
@@ -137,26 +130,22 @@ Context Layers:
 
 ### Think Engine
 
-Components:
-
+Components :
 - engine.sh
 - ranker.sh
 
-Delivered:
-
+Delivered :
 - Composite ranking model
 - Focus boost integration
 - Robust TAB parsing
 - Strict dependency loading
 
-Ranking Model:
-
+Ranking Model :
 composite_score =
 normalized_fts
 + focus_boost
 
-Architectural Impact:
-
+Architectural Impact :
 - Introduced contextual awareness
 - Preserved deterministic core
 - Maintained module isolation
@@ -165,10 +154,9 @@ Architectural Impact:
 
 ## Phase 3.3 — Observability Layer ✅
 
-Date: 2026-03-07
+Date : 2026-03-07
 
-Delivered:
-
+Delivered :
 - brain health
 - brain stats
 - brain session
@@ -178,25 +166,22 @@ Delivered:
 - graph command stabilization
 - full shellcheck compliance
 
-Capabilities:
-
+Capabilities :
 - database integrity visibility
 - context inspection
 - query explainability
 - indexing diagnostics
 
-Impact:
-
+Impact :
 The cognitive system became **transparent and inspectable**.
 
 ---
 
 ## Phase 3.4 — Graph Navigation ✅
 
-Date: 2026-03-08
+Date : 2026-03-08
 
-Delivered:
-
+Delivered :
 - graph query API in memory module
 - `brain graph`
 - `brain backlinks`
@@ -208,27 +193,46 @@ Delivered:
 - graph navigation tests
 - extended CLI smoke validation
 
-Architectural Impact:
-
+Architectural Impact :
 - The markdown graph became directly navigable
 - Graph inspection moved from embedded SQL to a reusable query API
 - Batch rebuild became robust against lexical ordering of linked notes
 - Brain gained explicit path traversal over note relations
 
-Impact:
-
+Impact :
 KaoBox moved from graph awareness to graph navigation.
 
 ---
 
-# Phase 3.5 — Graph-Aware Cognition ⏭️
+## Phase 3.5 — Graph-Aware Cognition ✅
 
-Planned next step:
+Date : 2026-03-08
 
-- graph proximity boost
-- graph-weighted think ranking
-- graph-aware related note scoring
-- path-aware context blending
+Delivered :
+- graph proximity query API (`query_graph_proximity_by_note`)
+- graph context expansion in Think Engine
+- graph boost integrated into ranking model
+- composite ranking model updated
+- deterministic integration with existing cognitive pipeline
+- new validation tests:
+  - `test_graph_proximity.sh`
+  - `test_think_graph_boost.sh`
+- CLI smoke test extended with `brain think`
+
+Updated Ranking Model :
+composite_score =
+normalized_fts
++ focus_boost
++ graph_boost
+
+Architectural Impact :
+- Graph structure is now used as a ranking signal
+- Think Engine became graph-aware
+- Context expansion now includes graph proximity
+
+Impact :
+KaoBox moved from graph navigation
+to **graph-aware cognition**.
 
 ---
 
@@ -238,16 +242,14 @@ Goal:
 
 Extend contextual intelligence toward structured agent behavior.
 
-Planned capabilities:
-
+Planned capabilities :
 - Hybrid semantic ranking (FTS + graph)
 - Cross-note reinforcement signals
 - Multi-module orchestration
 - Structured task planning
 - Controlled execution graphs
 
-Constraint:
-
+Constraint :
 Core must remain deterministic.  
 Adaptation must remain modular.
 
@@ -255,8 +257,7 @@ Adaptation must remain modular.
 
 # Phase 5 — Distributed Brain (Vision)
 
-Long-term evolution:
-
+Long-term evolution :
 - Multi-instance coordination
 - State replication
 - Remote orchestration
@@ -271,7 +272,7 @@ Phase 1 → Deterministic Foundation
 Phase 2 → Infrastructure Hardening  
 Phase 3 → Contextual Intelligence  
 Phase 3.4 → Graph Navigation  
-Phase 3.5 → Graph-Aware Cognition  
+Phase 3.5 → Graph-Aware Cognition (current milestone)   
 Phase 4 → Structured Adaptation  
 Phase 5 → Distributed Cognition  
 
@@ -284,6 +285,7 @@ Memory Engine: Production-grade
 Context Engine: Operational  
 Observability: Integrated  
 Graph Navigation: Integrated  
+Graph Cognition: Integrated  
 Agent Layer: Emerging  
 
 KaoBox has transitioned from a structural system
