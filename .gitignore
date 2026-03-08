@@ -26,6 +26,11 @@ release_lock
 *_SNAPSHOT.sh
 tests/tmp/
 
+# KaoBox audit snapshots
+CODES_SOURCES_GLOBAL.sh
+FICHIERS_SOURCES_GLOBAL.md
+*.bak.phase*
+
 # Snapshots text artifacts
 brain_dump.txt
 brain_base64.txt
