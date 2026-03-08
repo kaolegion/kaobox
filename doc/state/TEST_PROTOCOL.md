@@ -1,7 +1,7 @@
 # KaoBox Test Protocol
 
 Version: v2.9  
-Aligned with Phase 3.4 completion
+Aligned with Phase 3.5 completion
 
 A version can be validated only if all checks pass.
 
@@ -14,9 +14,10 @@ Validation must confirm:
 ---
 
 # 1 Core Validation
+
 Core must remain deterministic and stable.
 
-Checks:
+Checks :
 - `core/env.sh` loads without error
 - `core/sanity.sh` returns success
 - `core/logger.sh` initializes correctly
@@ -28,7 +29,8 @@ Failure of any check invalidates the release.
 ---
 
 # 2 SQLite & Memory Engine Validation
-Checks:
+
+Checks :
 - WAL mode enabled
 - `PRAGMA synchronous = FULL` or runtime durability policy consistent with current track
 - Integrity check passes (`brain doctor`)
@@ -45,7 +47,8 @@ Memory must be:
 ---
 
 # 3 Memory Index Validation
-Checks:
+
+Checks :
 - Markdown notes are indexed
 - Titles extracted correctly
 - Tags extracted from `#tags`
@@ -53,12 +56,16 @@ Checks:
 - File hash stored
 - File mtime stored
 
-Verification commands:
-brain reindex
-brain stats
-brain health
+Verification commands :
+Verification:
+brain graph <note>
+brain backlinks <note>
+brain neighbors <note>
+brain path <a> <b>
+query_graph_proximity_by_note <note_id>
+sqlite3 brain.db "SELECT COUNT(*) FROM links;"
 
-Expected:
+Expected :
 - FTS rows == notes count
 - tags count stable
 - links count consistent
@@ -66,7 +73,8 @@ Expected:
 ---
 
 # 4 Graph Navigation Validation
-Checks:
+
+Checks :
 - Markdown links `[[note]]` detected
 - Links inserted into `links` table
 - `brain graph <note>` resolves outgoing and incoming edges
@@ -74,8 +82,9 @@ Checks:
 - `brain neighbors <note>` returns direct graph neighbors
 - `brain path <a> <b>` returns a deterministic traversal when a path exists
 - Two-pass batch reindex resolves forward links correctly
+- Graph proximity query returns deterministic neighbors
 
-Verification:
+Verification :
 brain graph <note>
 brain backlinks <note>
 brain neighbors <note>
@@ -85,7 +94,8 @@ sqlite3 brain.db "SELECT COUNT(*) FROM links;"
 ---
 
 # 5 Context Engine Validation
-Checks:
+
+Checks :
 - Context resolver returns structured layers
 - SELF node present
 - GRAPH_IN nodes detected
@@ -93,7 +103,7 @@ Checks:
 - RECENT nodes included
 - Temporal decay applied
 
-Verification:
+Verification :
 brain context <note>
 brain context --trace <note>
 
@@ -102,28 +112,31 @@ Scoring must remain reproducible.
 ---
 
 # 6 Think Engine Validation
-Checks:
+
+Checks :
 - FTS results retrieved
 - Composite ranking applied
 - Focus boost applied to active session
+- Graph proximity boost applied when neighbors match
 - Ranking stable across repeated queries
 
-Verification:
+Verification :
 brain think <query>
 
-Expected:
+Expected :
 - results sorted by composite score
 - active session note boosted
 
 ---
 
 # 7 Observability Validation
-Checks:
+
+Checks :
 - Runtime diagnostics available
 - Context session visible
 - Query explainability functional
 
-Verification commands:
+Verification commands :
 brain status
 brain doctor
 brain health
@@ -131,7 +144,7 @@ brain stats
 brain session
 brain explain <query>
 
-Expected:
+Expected :
 - DB integrity reported
 - runtime metrics visible
 - session focus displayed
@@ -139,7 +152,8 @@ Expected:
 ---
 
 # 8 CLI Validation
-Checks:
+
+Checks :
 - `brain` CLI loads correctly
 - `brain --help` displays command list
 - commands return correct exit codes
@@ -152,7 +166,8 @@ CLI must orchestrate, not compute.
 ---
 
 # 9 Module Isolation Validation
-Checks:
+
+Checks :
 - Modules load without modifying Core
 - memory module initializes safely
 - No module overrides `bin/brain`
@@ -164,7 +179,8 @@ Isolation is mandatory.
 ---
 
 # 10 State Validation
-Checks:
+
+Checks :
 - `state/golden.version` matches runtime
 - `state/system.lang` readable
 - state directory writable
@@ -175,7 +191,8 @@ State must remain explicit and recoverable.
 ---
 
 # 11 Determinism Validation
-Checks:
+
+Checks :
 - Reindex twice → identical DB state
 - Context query twice → identical ordering
 - Think query twice → identical ranking
@@ -191,10 +208,27 @@ Adaptive behavior must remain bounded to modules.
 ---
 
 # 12 Validation Result
-All checks must pass before:
+
+All checks must pass before :
 - Phase closure
 - Version bump
 - Release tagging
 - Documentation freeze
 
 Failure of any check blocks release.
+
+---
+
+# Automated Test Suite
+
+The following scripts must pass :
+./tests/run_all.sh
+
+Which includes :
+- test_logger.sh
+- test_memory_index.sh
+- test_graph_navigation.sh
+- test_graph_path.sh
+- test_graph_proximity.sh
+- test_think_graph_boost.sh
+- test_brain_cli.sh
