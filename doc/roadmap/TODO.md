@@ -42,20 +42,35 @@ Graph is now a first-class navigation surface in Brain.
 
 ---
 
-# Immediate (Phase 3.5 — Graph-Aware Cognition)
+# DONE (Phase 3.5 — Graph-Aware Cognition)
 
-Goal: promote graph from navigation layer to ranking signal.
+Goal achieved: promote graph structure from navigation layer
+to active cognitive ranking signal.
 
-- [ ] Graph proximity boost in think ranking
+- [x] Graph proximity query API (`query_graph_proximity_by_note`)
+- [x] Graph context expansion in Think Engine
+- [x] Graph proximity boost in ranking model
+- [x] Composite ranking model implemented:
+      normalized_fts + focus_boost + graph_boost
+- [x] Deterministic integration with existing ranking pipeline
+- [x] Test suite additions:
+      - `test_graph_proximity.sh`
+      - `test_think_graph_boost.sh`
+- [x] CLI smoke test extended with `brain think`
+
+Outcome :
+The markdown graph is now used as a **cognitive relevance signal**
+in addition to navigation..
+
+---
+
+# Immediate (Phase 3.6 — Graph Expansion)
+
 - [ ] Configurable graph weighting
 - [ ] Path-aware context expansion
 - [ ] Related notes command based on graph distance
-- [ ] Stronger ambiguous note resolution policy
 - [ ] Graph export groundwork
-
-Outcome:
-
-Graph becomes an active cognition signal, not just a navigation surface.
+- [ ] Stronger ambiguous note resolution policy
 
 ---
 
