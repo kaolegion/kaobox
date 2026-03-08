@@ -23,25 +23,22 @@ Separation is mandatory.
 
 # Location
 
-All modules must reside in:
-
+All modules must reside in :
 `/opt/kaobox/modules/<module_name>/`
 
-Example:
+Example :
 `/opt/kaobox/modules/memory/`
 
 ---
 
 # Required Structure
 
-Each module must contain:
-
+Each module must contain :
 - init.sh        → initialization entrypoint
 - index.sh       → public module entry
-- query.sh       → exposed query interface (if applicable)
+- query.sh       → public query interface (graph, search, traversal, etc.)
 
-Recommended structure:
-
+Recommended structure :
 module/
 ├── engine/      → low-level logic
 ├── context/     → adaptive logic (if applicable)
@@ -56,8 +53,7 @@ Modules must explicitly expose their public interface.
 
 ## Core Responsibilities
 
-### Core is responsible for:
-
+Core is responsible for :
 - Environment bootstrap
 - Logging system
 - Sanity validation
@@ -65,15 +61,13 @@ Modules must explicitly expose their public interface.
 - Localization
 - Runtime state management
 
-### Core provides:
-
+Core provides :
 - Logging utilities
 - Environment variables
 - Controlled execution context
 - Stable runtime state
 
-### Core must remain:
-
+Core must remain :
 - Deterministic
 - Minimal
 - Module-agnostic
@@ -82,7 +76,10 @@ Modules must explicitly expose their public interface.
 
 ## Allowed Interactions
 
-### Modules MAY:
+Modules MAY :
+Modules SHOULD prefer SQL emission patterns when interacting
+with the persistence layer. Execution orchestration is handled
+by higher-level runtime components.
 
 - Use Core logging utilities
 - Read from state/
@@ -92,8 +89,7 @@ Modules must explicitly expose their public interface.
 - Register CLI commands through the dispatcher layer
 - Maintain their own internal SQLite schema
 
-### Modules MAY implement:
-
+Modules MAY implement :
 - Adaptive ranking
 - Context engines
 - Graph logic
@@ -104,8 +100,7 @@ Modules must explicitly expose their public interface.
 
 ## Forbidden Interactions
 
-### Modules must NOT:
-
+Modules must NOT :
 - Modify core/
 - Modify base/
 - Override bin/brain
@@ -119,8 +114,7 @@ Core integrity is non-negotiable.
 
 ## CLI Separation Rule
 
-### CLI layer (lib/brain/commands/) must:
-
+CLI layer (lib/brain/commands/) must :
 - Validate arguments
 - Call module interfaces
 - Not contain business logic
@@ -128,8 +122,7 @@ Core integrity is non-negotiable.
 Modules must expose callable functions.
 CLI must orchestrate, not compute.
 
-This rule applies especially to:
-
+This rule applies especially to :
 - SQL access
 - graph traversal
 - ranking logic
@@ -139,8 +132,7 @@ This rule applies especially to:
 
 ## Isolation Rule
 
-### Modules must:
-
+Modules must :
 - Be self-contained
 - Fail safely
 - Handle their own schema
@@ -157,8 +149,7 @@ Core is deterministic.
 Modules may introduce adaptive behavior,
 but only inside their isolated engine.
 
-### Example:
-
+Example :
 - Context ranking
 - Temporal decay
 - Session boosting
@@ -170,15 +161,13 @@ These must never compromise Core stability.
 
 ## Hook System (Future Extension)
 
-###Planned standard hooks:
-
+Planned standard hooks :
 - on_init
 - on_before_execute
 - on_after_execute
 - on_shutdown
 
-### Hooks must be:
-
+Hooks must be :
 - Explicitly registered
 - Non-invasive
 - Optional
@@ -189,26 +178,24 @@ Core must function without any module installed.
 
 ## Data Ownership Rule
 
-Each module owns:
-
+Each module owns :
 - Its database schema
 - Its indexing logic
 - Its ranking model
 - Its internal cache
 - Its graph query API
+- Its public query API
 
-Core owns:
-
+Core owns :
 - Runtime state
 - System versioning
 - Execution safety
 
 ---
 
-##Failure Model
+## Failure Model
 
-Modules must:
-
+Modules must :
 - Fail explicitly
 - Log errors
 - Not silently corrupt state
@@ -222,8 +209,7 @@ Graceful degradation is mandatory.
 
 ### Modules are engines.
 
-They may introduce:
-
+They may introduce :
 - Intelligence
 - Context
 - Learning
@@ -236,17 +222,15 @@ But never structural instability.
 
 ## Contract Summary
 
-### Core:
-
+Core :
 - Deterministic
 - Stable
 - Minimal
 
-### Modules:
-
+Modules :
 - Isolated
 - Explicit
 - Replaceable
 - Evolvable
 
-KaoBox grows through modules, not by expanding the Core.
+KaoBox evolves through modules, not by expanding the Core.
