@@ -19,8 +19,7 @@ and an emerging structured agent layer.
 
 # Phase 1 — Structural Foundation ✅
 
-Objectives:
-
+Objectives :
 - Clean layered architecture
 - Deterministic Core
 - Strict separation between Core and Modules
@@ -28,25 +27,23 @@ Objectives:
 - Modular engine design
 - Documentation baseline
 
-Memory:
-
+Memory :
 - Brain module initialized
 - SQL-only emission model
 - Transaction wrapper architecture
 - Explicit schema ownership
 
-Status: COMPLETE
+Status : COMPLETE
 
 ---
 
 # Phase 2 — Production Hardening (Brain v2.8) ✅
 
-Objective:
-
+Objective :
 Transform Brain into a production-grade,
 concurrency-safe memory engine.
 
-Delivered:
+Delivered :
 
 ## SQLite Hardening
 
@@ -74,16 +71,15 @@ Delivered:
 - Controlled WAL growth
 - Zero output regression
 
-Tag: v2.8  
-Branch: release/brain-v2.8  
-Status: STABLE
+Tag : v2.8  
+Branch : release/brain-v2.8  
+Status : STABLE
 
 ---
 
 # Phase 3 — Operational Intelligence (v2.9)
 
-Objective:
-
+Objective :
 Build a stable operational cognitive layer
 on top of the hardened infrastructure.
 
@@ -91,57 +87,50 @@ on top of the hardened infrastructure.
 
 ## Phase 3.1 — CLI Stabilization ✅
 
-Delivered:
-
+Delivered :
 - Command normalization
 - Deterministic dispatcher
 - Argument validation consistency
 - Shell integration
 - CLI completion system
 
-Status: COMPLETE
+Status : COMPLETE
 
 ---
 
 ## Phase 3.2 — Context Engine ✅
 
-Location:
-
+Location :
 lib/brain/context/
 
-Delivered:
-
+Delivered :
 - Context resolver
 - Adaptive scoring model
 - Session focus tracking
 - Layered ranking system
 
-Context Layers:
-
+Context Layers :
 - SELF
 - GRAPH_OUT
 - GRAPH_IN
 - RECENT
 
-Scoring Model:
-
+Scoring Model :
 Score =
     (Layer Weight × Temporal Decay)
     + Session Boost
 
-Outcome:
-
+Outcome :
 Context-aware memory navigation
 without breaking Core determinism.
 
-Status: STABLE
+Status : STABLE
 
 ---
 
 ## Phase 3.3 — Observability & Diagnostics ✅
 
-Delivered:
-
+Delivered :
 - `brain health`
 - `brain stats`
 - `brain session`
@@ -151,25 +140,22 @@ Delivered:
 - graph command stabilization
 - shellcheck cleanup
 
-Capabilities:
-
+Capabilities :
 - runtime database inspection
 - context visibility
 - query introspection
 - indexing diagnostics
 
-Outcome:
-
+Outcome :
 Transparent operational intelligence layer.
 
-Status: COMPLETE
+Status : COMPLETE
 
 ---
 
 ## Phase 3.4 — Graph Navigation ✅
 
-Delivered:
-
+Delivered :
 - refactored `brain graph <note>`
 - `brain backlinks <note>`
 - `brain neighbors <note>`
@@ -181,57 +167,63 @@ Delivered:
 - graph navigation tests
 - CLI smoke coverage extended
 
-Capabilities:
-
+Capabilities :
 - direct graph inspection
 - backlinks navigation
 - neighbor inspection
 - shortest-path style traversal over explicit links
 
-Outcome:
-
+Outcome :
 The indexed markdown graph became a first-class Brain navigation layer.
+
+Status : COMPLETE
+
+---
+
+## Phase 3.5 — Graph-Aware Cognition ✅
+
+Goal :
+Promote graph structure from navigation layer
+to an active cognitive ranking signal.
+
+Delivered :
+- graph proximity query API (`query_graph_proximity_by_note`)
+- graph context expansion in think engine
+- graph boost integrated into ranking model
+- composite scoring model for think results
+- deterministic integration without breaking core guarantees
+- new validation tests:
+  - `test_graph_proximity.sh`
+  - `test_think_graph_boost.sh`
+- CLI smoke test extended with `brain think`
+
+Ranking Model:
+
+composite =
+    normalized_fts
+    + focus_boost
+    + graph_boost
+
+Constraint respected :
+Graph intelligence remains modular.  
+Core determinism preserved.
+
+Outcome :
+The markdown graph is now used not only for navigation
+but also as a cognitive relevance signal
+in the Think Engine.
 
 Status: COMPLETE
 
 ---
 
-# Phase 3.5 — Graph-Aware Cognition
-
-Goal:
-
-Promote graph structure from navigation layer to active ranking signal.
-
-Planned:
-
-- graph proximity boost in think engine
-- configurable graph weighting
-- path-aware context expansion
-- related notes scoring
-- graph-aware retrieval blending
-
-Constraint:
-
-Graph intelligence must remain modular.  
-Core must remain deterministic.
-
-Expected outcome:
-
-Graph becomes part of cognitive ranking, not just graph inspection.
-
-Status: NEXT
-
----
-
 # Phase 4 — Adaptive Layer
 
-Goal:
-
+Goal :
 Introduce controlled adaptive intelligence
 above deterministic infrastructure.
 
-Planned:
-
+Planned :
 - Hybrid semantic ranking (FTS + graph)
 - Context-aware execution policies
 - Cross-note graph reinforcement
@@ -244,8 +236,7 @@ Constraint:
 Adaptive logic must remain modular.  
 Core must remain deterministic.
 
-Expected outcome:
-
+Expected outcome :
 Semi-autonomous structured agent.
 
 Status: PLANNED
@@ -254,20 +245,18 @@ Status: PLANNED
 
 # Phase 5 — Distributed Brain (Long-Term)
 
-Vision:
+Vision :
 
 Extend KaoBox beyond a single runtime.
 
-Goals:
-
+Goals :
 - Multi-brain instances
 - State replication
 - Remote orchestration
 - Snapshot & recovery layer
 - External toolchain integration
 
-Expected outcome:
-
+Expected outcome :
 Distributed agentic infrastructure.
 
 Status: VISION
@@ -288,17 +277,15 @@ Status: VISION
 
 # Current State Summary
 
-Brain v2.9 now provides:
-
+Brain v2.9 now provides :
 - transactional memory engine
 - context-aware retrieval
 - graph-based note relations
 - runtime observability tools
 - direct graph navigation and path traversal
 
-KaoBox is transitioning from:
-
+KaoBox evolution path :
 Infrastructure maturity  
 → Operational intelligence  
-→ Graph-aware cognition  
+→ Graph-aware cognition (current state)  
 → Structured adaptive cognition
