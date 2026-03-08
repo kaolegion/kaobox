@@ -24,4 +24,13 @@ brain search test >/dev/null || true
 echo "[TEST] brain graph"
 brain graph test-modular >/dev/null || true
 
+echo "[TEST] brain backlinks"
+brain backlinks test >/dev/null || true
+
+echo "[TEST] brain neighbors"
+brain neighbors test >/dev/null || true
+
+echo "[TEST] brain path"
+brain path test-modular test >/dev/null || true
+
 echo "[PASS] Brain CLI smoke test passed"

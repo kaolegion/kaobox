@@ -1,286 +1,108 @@
-# KaoBox Architecture
+# KaoBox
 
-## Overview
-KaoBox is a modular cognitive infrastructure designed as a **deterministic brain kernel**.
+KaoBox is a modular deterministic cognitive system for Linux. **deterministic brain kernel**
+
+It is designed as a programmable brain runtime capable of managing:
+
+- knowledge
+- notes
+- projects
+- context
+- graph relations
+- cognitive workflows
+- future agent orchestration
 
 Root path:
-/opt/kaobox
 
-The system is layered to enforce:
-- Determinism
-- Isolation
-- Explicit state
-- Controlled extensibility
+> `/opt/kaobox`
 
 ---
 
-# System Layers
+## Brain CLI
+
+Main entrypoint:
+
+> brain <command>
+
+Examples:
+
+- brain status
+- brain search "query"
+- brain think "query"
+- brain graph test
+- brain backlinks test
+- brain neighbors test
+- brain path test-modular test
+- brain reindex
 
 ---
 
-# Layer 0 — Operating System
-Environment:
+## Architecture
 
-- Linux
-- Bash
-- SQLite
+### Main layers:
 
-KaoBox assumes a controlled POSIX runtime.
-
----
-
-# Layer 1 — Core (Deterministic Kernel)
-Directory:
-core/
-
-Components:
-- env.sh
-- init.sh
-- logger.sh
-- sanity.sh
-- shell.sh
-- lang/
-- state/
-
-Responsibilities:
-- Environment bootstrap
-- Logging
-- System validation
-- Localization
-- Deterministic runtime configuration
-
-Rules:
-
-Core must:
-- Never depend on modules
-- Never contain business logic
-- Remain minimal and stable
-
-Core = infrastructure only.
+- core/ → deterministic infrastructure
+- lib/brain/ → cognitive runtime
+- modules/ → domain engines
+- bin/ → CLI entrypoints
+- doc/ → architecture and roadmap
+- tests/ → validation suite
 
 ---
 
-# Layer 2 — Cognitive Layer (Brain)
-Directory:
-lib/brain/
+## Current State
 
-Components:
-- dispatcher.sh
-- commands/
-- context/
-- think/
-- renderer.sh
-- sanitize.sh
-- preflight.sh
-- lock.sh
+Track: v2.9
+Current phase: Phase 3.4 — Graph Navigation
 
-This layer implements the **cognitive runtime**.
+### Delivered capabilities:
 
-Responsibilities:
-- command dispatch
-- context resolution
-- ranking logic
-- reasoning orchestration
-- rendering output
-
----
-
-# Context Engine
-Location:
-lib/brain/context/
-
-Components:
-- resolver.sh
-- scorer.sh
-- session.sh
-
-Purpose:
-Build contextual signals for ranking.
-
-### Context Layers
-- SELF
-- GRAPH_OUT
-- GRAPH_IN
-- RECENT
-
-### Ranking Model
-Score =
-(Layer Weight × Temporal Decay)
-+ Session Boost
-
-Layer Weights:
-SELF → 4  
-GRAPH_OUT → 3  
-GRAPH_IN → 2  
-RECENT → 1
-
-Temporal Decay:
-0–1 days → 100%  
-2–7 days → 70%  
-8–30 days → 40%  
->30 days → 20%
-
-Session Boost:
-+5 if note is active focus
-
----
-
-# Think Engine
-Location:
-lib/brain/think/
-
-Components:
-- engine.sh
-- ranker.sh
-
-Purpose:
-Composite retrieval and ranking.
-
-Dependencies:
-- memory/query.sh
-- context/session.sh
-
-Ranking formula:
-composite_score =
-normalized_fts
-+ focus_boost
-
-Focus boost:
-+5 if note is active.
-
----
-
-# Layer 3 — Modules
-Directory:
-modules/
-
-Modules provide **domain engines**.
-
-Current module:
-modules/memory/
-
----
-
-# Memory Module
-Location:
-modules/memory/
-
-Structure:
-memory/
-├── engine/
-│ ├── utils.sh
-│ ├── metadata.sh
-│ ├── fts.sh
-│ ├── tags.sh
-│ ├── links.sh
-│ └── tx.sh
-├── index.sh
-├── query.sh
-├── gc.sh
-└── init.sh
-
-Features:
-- SQLite WAL
-- FTS5 search
-- transactional indexing
+- transactional memory indexing
+- FTS5 retrieval
 - tag extraction
-- markdown link graph
-- file hash tracking
-
-Modules must:
-- remain isolated
-- not mutate core
-- expose explicit interfaces
+- markdown graph extraction
+- observability commands
+- graph navigation commands
+- deterministic path traversal
 
 ---
 
-# Layer 4 — CLI Interface
-Directory:
-bin/
+## Graph Commands
 
-Components:
-bin/brain
-bin/kaobox-shell
+> brain graph <note>
+> brain backlinks <note>
+> brain neighbors <note>
+> brain path <from_note> <to_note>
 
-The CLI:
-
-- parses user commands
-- invokes the brain dispatcher
-- never accesses the database directly
+These commands use the indexed markdown graph as an explicit navigation layer.
 
 ---
 
-# Layer 5 — Runtime State
-Directory:
-state/
+## Testing
 
-Contains:
-- version state
-- language state
-- runtime flags
+### Run all tests:
 
-Mutable by design.
+> ./tests/run_all.sh
 
----
+### Expected result:
 
-# Layer 6 — Documentation
-Directory:
-doc/
-
-Contains:
-- architecture
-- roadmap
-- phase history
-- agent specifications
-- test protocols
-
-Documentation is considered part of the **system contract**.
+> [SUCCESS] All tests passed
 
 ---
 
-# Think Pipeline
-User Query
-↓
-FTS Query (modules/memory/query.sh)
-↓
-Think Engine (lib/brain/think/engine.sh)
-↓
-Ranker
-↓
-Renderer
-↓
-CLI Output
+## Principles
+
+- deterministic core
+- modular isolation
+- explicit state
+- no hidden side effects
+- shell-first design
+- infrastructure before intelligence
 
 ---
 
-# Design Principles
-1. Deterministic Core  
-2. Modular Engines  
-3. Explicit State  
-4. Minimal Coupling  
-5. Infrastructure First  
-6. Intelligence as Layered Emergence  
+## Vision
 
----
+KaoBox is not only a note tool.
 
-# Architectural Identity
-KaoBox is not a workspace.
-
-It is a **programmable cognitive kernel**.
-
-Where most systems optimize UI,
-KaoBox optimizes **structured cognition**.
-
----
-
-# Future Extensions
-- Graph navigation engine
-- semantic ranking layer
-- reinforcement signals
-- agent orchestration layer
-
----
-
-# Status
-Phase 3.3 — Observability Layer  
-System Status: **Stable Cognitive Kernel**
+It is a deterministic cognitive infrastructure designed to evolve toward graph-aware cognition and structured agent orchestration.

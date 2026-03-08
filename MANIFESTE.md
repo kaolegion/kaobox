@@ -1,7 +1,7 @@
 # KAOBOX — MANIFESTE FONDATEUR
-### A Modular Cognitive Operating System
+### A Modular Deterministic Cognitive System
 
-Version: 1.0  
+Version: 1.1  
 Author: KaoLegion  
 Project: KaoBox + KaoBox Brain  
 
@@ -9,25 +9,25 @@ Project: KaoBox + KaoBox Brain
 
 # 1. Vision
 
-KaoBox est un système visant à créer un **environnement cognitif modulaire** permettant d'orchestrer :
+KaoBox vise à construire un **système cognitif modulaire, déterministe et programmable**.
+
+Ce système doit permettre d’orchestrer :
 
 - la mémoire
 - la connaissance
+- le contexte
+- les graphes de relations
 - les outils
-- les flux de travail
-- les agents intelligents
+- les workflows cognitifs
+- les futurs agents
 
-dans une architecture cohérente, reproductible et portable.
+L’objectif n’est pas seulement de stocker des notes.
 
-L'objectif n'est pas simplement de créer un outil, mais de développer un **système cognitif programmable**.
-
-KaoBox vise à devenir une **couche d’orchestration personnelle entre l’humain, la connaissance et l’intelligence artificielle.**
+L’objectif est de bâtir une **infrastructure cognitive explicite**.
 
 ---
 
 # 2. Philosophie du projet
-
-Le projet repose sur plusieurs principes fondamentaux.
 
 ## 2.1 Modularité radicale
 
@@ -38,365 +38,244 @@ Chaque composant doit être :
 - testable
 - extensible
 
-Aucun composant ne doit devenir un monolithe.
+Aucun composant ne doit devenir un monolithe opaque.
 
 ---
 
-## 2.2 Simplicité systémique
-
-Le système doit rester :
-
-- compréhensible
-- inspectable
-- déboguable
-- reproductible
-
-La complexité doit émerger de la **composition des modules**, jamais de leur opacité.
-
----
-
-## 2.3 Transparence
-
-Le système doit rester :
-
-- lisible
-- traçable
-- auditable
-
-Les mécanismes internes doivent être visibles et contrôlables.
-
----
-
-## 2.4 IA augmentative
-
-L’IA n’est pas un substitut humain mais un **amplificateur cognitif**.
-
-Le système doit permettre :
-
-- l’augmentation de la pensée
-- l’augmentation de la mémoire
-- l’augmentation de la créativité
-- l’automatisation des tâches cognitives répétitives
-
----
-
-# 3. Le concept de Brain
-
-## KaoBox Brain
-
-Le **Brain** est la couche cognitive du système.
-
-Il agit comme :
-
-- une mémoire externe
-- un moteur d’indexation
-- un moteur de recherche
-- un moteur de contexte
-
-Le Brain gère :
-
-- les notes
-- les connaissances
-- les métadonnées
-- les relations entre informations
-
----
-
-# 4. Architecture générale
-
-Le projet se divise en plusieurs couches.
-
----
-
-# KaoBox System
-
-├── Core
-│ ├── CLI
-│ ├── Dispatcher
-│ └── Kernel Logic
-│
-├── Brain
-│ ├── Memory Engine
-│ ├── Index Engine
-│ ├── Query Engine
-│ └── Context Engine
-│
-├── Modules
-│ ├── Knowledge
-│ ├── Tools
-│ ├── Agents
-│ └── Automation
-│
-├── Data
-│ ├── Brain Data
-│ ├── Notes
-│ ├── Metadata
-│ └── Index
-│
-└── Interfaces
-├── CLI
-├── API
-├── Agents
-└── External Systems
-
-
----
-
-# 5. KaoBox Brain
-
-Le Brain constitue la composante centrale du système.
-
-Ses fonctions principales :
-
-## 5.1 Memory Engine
-
-Responsable de :
-
-- stocker les notes
-- gérer les métadonnées
-- maintenir la cohérence du système
-
----
-
-## 5.2 Index Engine
-
-Responsable de :
-
-- indexer les notes
-- créer des structures de recherche
-- maintenir les index
-
----
-
-## 5.3 Query Engine
-
-Permet :
-
-- la recherche
-- l'analyse contextuelle
-- l'extraction d'information
-
----
-
-## 5.4 Context Engine
-
-Objectif futur :
-
-- assembler dynamiquement le contexte
-- fournir un état cognitif aux agents
-- alimenter les IA externes
-
----
-
-# 6. Les agents
-
-KaoBox prévoit l’intégration d’agents autonomes.
-
-Les agents peuvent :
-
-- analyser
-- classer
-- enrichir
-- automatiser
-
-Ils peuvent interagir avec :
-
-- la mémoire
-- les outils
-- les flux de travail
-
----
-
-# 7. Le modèle cognitif
-
-Le système vise à reproduire certaines structures cognitives humaines :
-
-Entrées
-↓
-Traitement
-↓
-Mémoire
-↓
-Contexte
-↓
-Décision / Action
-
-
-Les composants principaux :
-
-### Inbox
-Entrées d'information.
-
-### Memory
-Stockage structuré.
-
-### Context
-Assemblage dynamique des informations pertinentes.
-
-### Action
-Automatisation ou assistance.
-
----
-
-# 8. Portabilité
-
-KaoBox est conçu pour être :
-
-- portable
-- installable sur Linux
-- indépendant de la machine
-
-L'objectif est que le système puisse être déployé comme un **environnement cognitif portable.**
-
----
-
-# 9. Principes d'ingénierie
-
-## Shell First
-
-Le système privilégie :
-
-- bash
-- scripts simples
-- outils Unix
-
-Pourquoi ?
-
-Parce que :
-
-- c'est portable
-- c'est inspectable
-- c'est robuste
-
----
-
-## Deterministic Systems
+## 2.2 Déterminisme
 
 Le système doit rester :
 
 - prévisible
 - reproductible
-- déterministe
+- auditable
+
+Le déterminisme n’est pas une contrainte secondaire.
+Il est au cœur de l’identité KaoBox.
 
 ---
 
-## Testability
+## 2.3 Transparence
 
-Chaque composant doit être testable.
+Les mécanismes internes doivent être :
 
-Les tests permettent :
+- lisibles
+- traçables
+- inspectables
 
-- validation
-- non-régression
-- robustesse
-
----
-
-# 10. Cas d'utilisation
-
-Le système peut être utilisé pour :
-
-### Knowledge Management
-
-- notes
-- recherche
-- base de connaissance
+L’intelligence ne doit jamais être cachée dans des effets implicites.
 
 ---
 
-### AI Augmentation
+## 2.4 IA augmentative
 
-- fournir du contexte à des IA
-- structurer la mémoire
+L’IA n’est pas un remplacement humain.
 
----
+Elle est un **amplificateur cognitif**.
 
-### Automation
+KaoBox doit permettre :
 
-- automatiser les tâches intellectuelles
-- orchestrer des workflows
-
----
-
-### Personal Cognitive OS
-
-Créer un **système cognitif personnel.**
+- d’augmenter la mémoire
+- d’augmenter la navigation dans la connaissance
+- d’augmenter le raisonnement contextualisé
+- d’automatiser certaines opérations cognitives
 
 ---
 
-# 11. Roadmap
+# 3. Le concept de Brain
 
-## Phase 1 — Brain Core
-- Memory Engine
-- Index Engine
-- Query Engine
+Le Brain est la couche cognitive de KaoBox.
 
-## Phase 2 — Context System
-- Context Engine
-- Semantic linking
+Il agit comme :
 
-## Phase 3 — Agent System
-- Agent orchestration
-- task automation
+- moteur mémoire
+- moteur d’indexation
+- moteur de recherche
+- moteur de contexte
+- moteur de graphe
 
-## Phase 4 — Cognitive OS
-- intelligence augmentée
-- workflows autonomes
+Il gère :
 
----
-
-# 12. Inspiration
-
-Le projet s'inspire de plusieurs approches :
-
-- systèmes Unix
-- outils de gestion de connaissance
-- architectures modulaires
-
-Mais cherche à créer une **synthèse nouvelle : un système cognitif programmable.**
+- les notes
+- les métadonnées
+- les tags
+- les liens markdown
+- les chemins entre notes
 
 ---
 
-# 13. Vision long terme
+# 4. Architecture générale
 
-Créer une infrastructure permettant :
+KaoBox repose sur plusieurs couches :
 
-- aux humains
-- aux IA
-- aux agents
+- Core → infrastructure déterministe
+- Brain → runtime cognitif
+- Modules → moteurs spécialisés
+- Data → mémoire, index, état
+- Interfaces → CLI, agents, intégrations futures
 
-de collaborer dans un **espace cognitif partagé.**
-
-KaoBox ne vise pas seulement à gérer des notes.
-
-Il vise à construire :
-
-**un cerveau externe programmable.**
+Le système doit croître **par composition**, non par opacité.
 
 ---
 
-# 14. Licence et ouverture
+# 5. KaoBox Brain aujourd’hui
 
-Le projet vise à rester :
+Le Brain fournit déjà :
 
-- ouvert
-- modulaire
-- extensible
+## 5.1 Memory Engine
 
-afin de permettre :
+- indexation transactionnelle
+- stockage SQLite
+- FTS5
+- tags
+- graph markdown
 
-- contributions
-- extensions
-- expérimentations
+## 5.2 Context Engine
+
+- couches SELF / GRAPH_OUT / GRAPH_IN / RECENT
+- scoring temporel
+- focus de session
+
+## 5.3 Observability Layer
+
+- health
+- stats
+- session
+- explain
+- diagnostics
+
+## 5.4 Graph Navigation Layer
+
+- `brain graph`
+- `brain backlinks`
+- `brain neighbors`
+- `brain path`
+
+KaoBox a maintenant dépassé la simple indexation.
+Il entre dans une logique de **navigation cognitive explicite**.
 
 ---
 
-# 15. Conclusion
+# 6. Le modèle cognitif
 
-KaoBox est une tentative de construire :
+Le système vise une chaîne de transformation :
 
-un système permettant d'augmenter la pensée humaine.
+Entrées  
+↓  
+Mémoire  
+↓  
+Graphe  
+↓  
+Contexte  
+↓  
+Raisonnement  
+↓  
+Action  
 
-Ce n'est pas seulement un logiciel.
+Les composants principaux sont :
 
-C'est une **infrastructure cognitive.**
+- Inbox
+- Memory
+- Graph
+- Context
+- Think
+- Action
+
+---
+
+# 7. Portabilité
+
+KaoBox est conçu pour être :
+
+- portable
+- installable sur Linux
+- indépendant d’une machine spécifique
+- lisible sans dépendre d’une interface propriétaire
+
+Le système doit pouvoir être transporté comme un **cerveau externe modulaire**.
+
+---
+
+# 8. Principes d’ingénierie
+
+## Shell First
+
+KaoBox privilégie :
+
+- bash
+- SQLite
+- outils Unix
+- scripts explicites
+
+Parce que ce choix favorise :
+
+- la portabilité
+- l’auditabilité
+- la robustesse
+
+## Infrastructure before intelligence
+
+L’intelligence n’a de valeur que si l’infrastructure est saine.
+
+## Tests as contract
+
+Les tests ne sont pas accessoires.
+Ils participent au contrat architectural.
+
+---
+
+# 9. Cas d’usage
+
+KaoBox peut servir à :
+
+- gestion de connaissance
+- mémoire personnelle structurée
+- recherche contextuelle
+- navigation par graphe
+- préparation d’agents
+- système cognitif personnel portable
+
+---
+
+# 10. Trajectoire
+
+Phase 1 → fondation  
+Phase 2 → durcissement production  
+Phase 3 → intelligence opérationnelle  
+Phase 3.4 → navigation graphe  
+Phase 3.5 → cognition orientée graphe  
+Phase 4 → agents structurés  
+Phase 5 → cognition distribuée  
+
+---
+
+# 11. Vision long terme
+
+Créer une infrastructure où :
+
+- humains
+- IA
+- agents
+- outils
+
+peuvent coopérer dans un **espace cognitif partagé, explicite et modulaire**.
+
+KaoBox n’est pas simplement un gestionnaire de notes.
+
+C’est une tentative de construire un **système cognitif programmable**.
+
+---
+
+# 12. Conclusion
+
+KaoBox cherche à augmenter la pensée humaine
+sans sacrifier :
+
+- la lisibilité
+- le contrôle
+- l’auditabilité
+- le déterminisme
+
+Ce n’est pas seulement un logiciel.
+
+C’est une **infrastructure cognitive déterministe**.

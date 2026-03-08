@@ -1,7 +1,7 @@
 # KaoBox Roadmap
 
 Version: v2.9  
-Last Update: 2026-03-07
+Last Update: 2026-03-08
 
 ---
 
@@ -166,6 +166,63 @@ Status: COMPLETE
 
 ---
 
+## Phase 3.4 — Graph Navigation ✅
+
+Delivered:
+
+- refactored `brain graph <note>`
+- `brain backlinks <note>`
+- `brain neighbors <note>`
+- `brain path <from_note> <to_note>`
+- graph traversal API in `modules/memory/query.sh`
+- deterministic BFS path traversal
+- portable note reference resolution
+- two-pass batch reindex for reliable link resolution
+- graph navigation tests
+- CLI smoke coverage extended
+
+Capabilities:
+
+- direct graph inspection
+- backlinks navigation
+- neighbor inspection
+- shortest-path style traversal over explicit links
+
+Outcome:
+
+The indexed markdown graph became a first-class Brain navigation layer.
+
+Status: COMPLETE
+
+---
+
+# Phase 3.5 — Graph-Aware Cognition
+
+Goal:
+
+Promote graph structure from navigation layer to active ranking signal.
+
+Planned:
+
+- graph proximity boost in think engine
+- configurable graph weighting
+- path-aware context expansion
+- related notes scoring
+- graph-aware retrieval blending
+
+Constraint:
+
+Graph intelligence must remain modular.  
+Core must remain deterministic.
+
+Expected outcome:
+
+Graph becomes part of cognitive ranking, not just graph inspection.
+
+Status: NEXT
+
+---
+
 # Phase 4 — Adaptive Layer
 
 Goal:
@@ -231,15 +288,17 @@ Status: VISION
 
 # Current State Summary
 
-Brain v2.9 provides:
+Brain v2.9 now provides:
 
 - transactional memory engine
 - context-aware retrieval
 - graph-based note relations
 - runtime observability tools
+- direct graph navigation and path traversal
 
 KaoBox is transitioning from:
 
 Infrastructure maturity  
 → Operational intelligence  
+→ Graph-aware cognition  
 → Structured adaptive cognition

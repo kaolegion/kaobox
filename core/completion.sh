@@ -62,7 +62,7 @@ _brain_completion() {
     # ------------------------------------------------------
     case "${COMP_WORDS[1]}" in
 
-        open|graph|backlinks)
+        open|graph|backlinks|neighbors|path)
             # Suggest note titles
             local titles
             titles="$(_brain__sqlite_list "SELECT title FROM notes WHERE title IS NOT NULL AND title != '' ORDER BY updated_at DESC;")"

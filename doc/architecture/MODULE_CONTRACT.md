@@ -25,10 +25,10 @@ Separation is mandatory.
 
 All modules must reside in:
 
-/opt/kaobox/modules/<module_name>/
+`/opt/kaobox/modules/<module_name>/`
 
 Example:
-/opt/kaobox/modules/memory/
+`/opt/kaobox/modules/memory/`
 
 ---
 
@@ -54,9 +54,9 @@ Modules must explicitly expose their public interface.
 
 ---
 
-# Core Responsibilities
+## Core Responsibilities
 
-Core is responsible for:
+### Core is responsible for:
 
 - Environment bootstrap
 - Logging system
@@ -65,14 +65,14 @@ Core is responsible for:
 - Localization
 - Runtime state management
 
-Core provides:
+### Core provides:
 
 - Logging utilities
 - Environment variables
 - Controlled execution context
 - Stable runtime state
 
-Core must remain:
+### Core must remain:
 
 - Deterministic
 - Minimal
@@ -80,9 +80,9 @@ Core must remain:
 
 ---
 
-# Allowed Interactions
+## Allowed Interactions
 
-Modules MAY:
+### Modules MAY:
 
 - Use Core logging utilities
 - Read from state/
@@ -92,18 +92,19 @@ Modules MAY:
 - Register CLI commands through the dispatcher layer
 - Maintain their own internal SQLite schema
 
-Modules MAY implement:
+### Modules MAY implement:
 
 - Adaptive ranking
 - Context engines
 - Graph logic
 - Business-specific storage
+- Traversal/query primitives
 
 ---
 
-# Forbidden Interactions
+## Forbidden Interactions
 
-Modules must NOT:
+### Modules must NOT:
 
 - Modify core/
 - Modify base/
@@ -116,9 +117,9 @@ Core integrity is non-negotiable.
 
 ---
 
-# CLI Separation Rule
+## CLI Separation Rule
 
-CLI layer (lib/brain/commands/) must:
+### CLI layer (lib/brain/commands/) must:
 
 - Validate arguments
 - Call module interfaces
@@ -127,48 +128,56 @@ CLI layer (lib/brain/commands/) must:
 Modules must expose callable functions.
 CLI must orchestrate, not compute.
 
+This rule applies especially to:
+
+- SQL access
+- graph traversal
+- ranking logic
+- state mutation rules
+
 ---
 
-# Isolation Rule
+## Isolation Rule
 
-Modules must:
+### Modules must:
 
 - Be self-contained
 - Fail safely
 - Handle their own schema
 - Not assume external state unless explicitly provided
 
-If a module crashes,
-Core must remain operational.
+If a module crashes, Core must remain operational.
 
 ---
 
-# Determinism Rule
+## Determinism Rule
 
 Core is deterministic.
 
 Modules may introduce adaptive behavior,
 but only inside their isolated engine.
 
-Example:
+### Example:
+
 - Context ranking
 - Temporal decay
 - Session boosting
+- Graph traversal ordering
 
 These must never compromise Core stability.
 
 ---
 
-# Hook System (Future Extension)
+## Hook System (Future Extension)
 
-Planned standard hooks:
+###Planned standard hooks:
 
 - on_init
 - on_before_execute
 - on_after_execute
 - on_shutdown
 
-Hooks must be:
+### Hooks must be:
 
 - Explicitly registered
 - Non-invasive
@@ -178,7 +187,7 @@ Core must function without any module installed.
 
 ---
 
-# Data Ownership Rule
+## Data Ownership Rule
 
 Each module owns:
 
@@ -186,6 +195,7 @@ Each module owns:
 - Its indexing logic
 - Its ranking model
 - Its internal cache
+- Its graph query API
 
 Core owns:
 
@@ -195,7 +205,7 @@ Core owns:
 
 ---
 
-# Failure Model
+##Failure Model
 
 Modules must:
 
@@ -208,9 +218,9 @@ Graceful degradation is mandatory.
 
 ---
 
-# Extension Philosophy
+## Extension Philosophy
 
-Modules are engines.
+### Modules are engines.
 
 They may introduce:
 
@@ -218,23 +228,25 @@ They may introduce:
 - Context
 - Learning
 - Ranking
+- Traversal
 
 But never structural instability.
 
 ---
 
-# Contract Summary
+## Contract Summary
 
-Core:
+### Core:
+
 - Deterministic
 - Stable
 - Minimal
 
-Modules:
+### Modules:
+
 - Isolated
 - Explicit
 - Replaceable
 - Evolvable
 
-KaoBox grows through modules,
-not by expanding the Core.
+KaoBox grows through modules, not by expanding the Core.

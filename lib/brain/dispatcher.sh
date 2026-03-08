@@ -85,7 +85,10 @@ Cognition:
   brain think <query>
 
 Graph:
-  brain graph
+  brain graph <note>
+  brain backlinks <note>
+  brain neighbors <note>
+  brain path <from_note> <to_note>
 
 Observability:
   brain health
@@ -218,8 +221,30 @@ brain_dispatch() {
         # ---- Graph ----
         graph)
             preflight_check
+            safe_source "$MEMORY_QUERY"
             load_command "graph.sh"
             cmd_graph "$@"
+            ;;
+
+        backlinks)
+            preflight_check
+            safe_source "$MEMORY_QUERY"
+            load_command "backlinks.sh"
+            cmd_backlinks "$@"
+            ;;
+
+        neighbors)
+            preflight_check
+            safe_source "$MEMORY_QUERY"
+            load_command "neighbors.sh"
+            cmd_neighbors "$@"
+            ;;
+
+        path)
+            preflight_check
+            safe_source "$MEMORY_QUERY"
+            load_command "path.sh"
+            cmd_path "$@"
             ;;
 
         help|--help|-h)
@@ -234,3 +259,4 @@ brain_dispatch() {
             ;;
     esac
 }
+	

@@ -1,7 +1,7 @@
 # KaoBox TODO
 
 Version: v2.9  
-Aligned with Phase 3.3 completion
+Aligned with Phase 3.4 completion
 
 ---
 
@@ -22,19 +22,40 @@ Phase 3.3 delivered the **Observability Layer**.
 
 ---
 
-# Immediate (Phase 3.4 — Graph Navigation)
+# DONE (Phase 3.4 — Graph Navigation)
 
-Goal: exploit the note graph for contextual navigation.
+Goal achieved: exploit the note graph for contextual navigation.
 
-- [ ] `brain neighbors <note>`
-- [ ] `brain backlinks <note>`
-- [ ] `brain path <noteA> <noteB>`
-- [ ] Graph proximity boost in ranking
-- [ ] Graph traversal API in memory module
+- [x] `brain graph <note>` refactored on memory query API
+- [x] `brain backlinks <note>`
+- [x] `brain neighbors <note>`
+- [x] `brain path <noteA> <noteB>`
+- [x] Graph traversal API in memory module
+- [x] Deterministic BFS path resolution
+- [x] Two-pass batch reindex for reliable graph resolution
+- [x] Graph navigation test suite
+- [x] CLI graph smoke coverage
 
 Outcome:
 
-Graph becomes a first-class signal for cognition.
+Graph is now a first-class navigation surface in Brain.
+
+---
+
+# Immediate (Phase 3.5 — Graph-Aware Cognition)
+
+Goal: promote graph from navigation layer to ranking signal.
+
+- [ ] Graph proximity boost in think ranking
+- [ ] Configurable graph weighting
+- [ ] Path-aware context expansion
+- [ ] Related notes command based on graph distance
+- [ ] Stronger ambiguous note resolution policy
+- [ ] Graph export groundwork
+
+Outcome:
+
+Graph becomes an active cognition signal, not just a navigation surface.
 
 ---
 

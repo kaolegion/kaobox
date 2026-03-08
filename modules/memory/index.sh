@@ -89,6 +89,14 @@ index_note() {
 
 # ==========================================================
 # BATCH REINDEX
+# ----------------------------------------------------------
+# Two-pass model:
+#   Pass 1 -> metadata / fts / tags
+#   Pass 2 -> links
+#
+# Rationale:
+#   Links may target notes that appear later in lexical order.
+#   All notes must exist in the DB before graph resolution.
 # ==========================================================
 reindex_all() {
 
@@ -99,6 +107,9 @@ reindex_all() {
     {
         begin_tx
 
+        # --------------------------------------------------
+        # PASS 1: materialize notes first
+        # --------------------------------------------------
         for file in "${files[@]}"; do
             require_absolute "$file"
             require_file "$file"
@@ -107,6 +118,14 @@ reindex_all() {
             metadata_sql "$file" "$FILE_TITLE" "$FILE_HASH" "$FILE_MTIME" "$FILE_SIZE"
             fts_sql "$file" "$FILE_TITLE" "$FILE_CONTENT"
             tags_sql "$file" "$file"
+        done
+
+        # --------------------------------------------------
+        # PASS 2: resolve graph links after all notes exist
+        # --------------------------------------------------
+        for file in "${files[@]}"; do
+            require_absolute "$file"
+            require_file "$file"
             links_sql "$file" "$file"
         done
 

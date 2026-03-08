@@ -191,6 +191,47 @@ The cognitive system became **transparent and inspectable**.
 
 ---
 
+## Phase 3.4 — Graph Navigation ✅
+
+Date: 2026-03-08
+
+Delivered:
+
+- graph query API in memory module
+- `brain graph`
+- `brain backlinks`
+- `brain neighbors`
+- `brain path`
+- deterministic BFS traversal
+- portable reference resolution
+- two-pass batch reindex for graph correctness
+- graph navigation tests
+- extended CLI smoke validation
+
+Architectural Impact:
+
+- The markdown graph became directly navigable
+- Graph inspection moved from embedded SQL to a reusable query API
+- Batch rebuild became robust against lexical ordering of linked notes
+- Brain gained explicit path traversal over note relations
+
+Impact:
+
+KaoBox moved from graph awareness to graph navigation.
+
+---
+
+# Phase 3.5 — Graph-Aware Cognition ⏭️
+
+Planned next step:
+
+- graph proximity boost
+- graph-weighted think ranking
+- graph-aware related note scoring
+- path-aware context blending
+
+---
+
 # Phase 4 — Adaptive Layer (Planned)
 
 Goal:
@@ -229,6 +270,8 @@ Long-term evolution:
 Phase 1 → Deterministic Foundation  
 Phase 2 → Infrastructure Hardening  
 Phase 3 → Contextual Intelligence  
+Phase 3.4 → Graph Navigation  
+Phase 3.5 → Graph-Aware Cognition  
 Phase 4 → Structured Adaptation  
 Phase 5 → Distributed Cognition  
 
@@ -240,7 +283,8 @@ Infrastructure: Stable
 Memory Engine: Production-grade  
 Context Engine: Operational  
 Observability: Integrated  
+Graph Navigation: Integrated  
 Agent Layer: Emerging  
 
 KaoBox has transitioned from a structural system
-to a **deterministic cognitive infrastructure**.
+to a **deterministic cognitive infrastructure** with explicit graph traversal.

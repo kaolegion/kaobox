@@ -1,6 +1,7 @@
-# KaoBox Test Protocol	
+# KaoBox Test Protocol
+
 Version: v2.9  
-Aligned with Phase 3.3 completion
+Aligned with Phase 3.4 completion
 
 A version can be validated only if all checks pass.
 
@@ -26,10 +27,10 @@ Failure of any check invalidates the release.
 
 ---
 
-# 2 SQLite & Memory Engine Validation (Phase 2)
+# 2 SQLite & Memory Engine Validation
 Checks:
 - WAL mode enabled
-- `PRAGMA synchronous = FULL`
+- `PRAGMA synchronous = FULL` or runtime durability policy consistent with current track
 - Integrity check passes (`brain doctor`)
 - Transaction wrapper enforces `BEGIN IMMEDIATE`
 - No partial writes after simulated crash
@@ -64,20 +65,26 @@ Expected:
 
 ---
 
-# 4 Graph Validation
+# 4 Graph Navigation Validation
 Checks:
 - Markdown links `[[note]]` detected
 - Links inserted into `links` table
-- `brain graph <note>` resolves edges
-- Backlinks returned correctly
+- `brain graph <note>` resolves outgoing and incoming edges
+- `brain backlinks <note>` returns incoming links
+- `brain neighbors <note>` returns direct graph neighbors
+- `brain path <a> <b>` returns a deterministic traversal when a path exists
+- Two-pass batch reindex resolves forward links correctly
 
 Verification:
 brain graph <note>
+brain backlinks <note>
+brain neighbors <note>
+brain path <a> <b>
 sqlite3 brain.db "SELECT COUNT(*) FROM links;"
 
 ---
 
-# 5 Context Engine Validation (Phase 3.2)
+# 5 Context Engine Validation
 Checks:
 - Context resolver returns structured layers
 - SELF node present
@@ -105,13 +112,12 @@ Verification:
 brain think <query>
 
 Expected:
-
 - results sorted by composite score
 - active session note boosted
 
 ---
 
-# 7 Observability Validation (Phase 3.3)
+# 7 Observability Validation
 Checks:
 - Runtime diagnostics available
 - Context session visible
@@ -123,10 +129,9 @@ brain doctor
 brain health
 brain stats
 brain session
-brain explain <query>	
+brain explain <query>
 
 Expected:
-
 - DB integrity reported
 - runtime metrics visible
 - session focus displayed
@@ -174,6 +179,8 @@ Checks:
 - Reindex twice → identical DB state
 - Context query twice → identical ordering
 - Think query twice → identical ranking
+- Graph query twice → identical ordering
+- Path query twice → identical traversal
 - No hidden runtime memory
 - No implicit global mutation
 
