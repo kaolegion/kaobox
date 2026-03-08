@@ -4,11 +4,10 @@
 
 KaoBox is a modular cognitive infrastructure designed as a **deterministic brain kernel**.
 
-Root path:
+Root path :
 `/opt/kaobox`
 
-The system is layered to enforce:
-
+The system is layered to enforce :
 - Determinism
 - Isolation
 - Explicit state
@@ -22,8 +21,7 @@ The system is layered to enforce:
 
 ## Layer 0 — Operating System
 
-Environment:
-
+Environment :
 - Linux
 - Bash
 - SQLite
@@ -34,11 +32,10 @@ KaoBox assumes a controlled POSIX runtime.
 
 ## Layer 1 — Core (Deterministic Kernel)
 
-Directory:
+Directory :
 `core/`
 
-Components:
-
+Components :
 - env.sh
 - init.sh
 - logger.sh
@@ -47,8 +44,7 @@ Components:
 - lang/
 - state/
 
-Responsibilities:
-
+Responsibilities :
 - Environment bootstrap
 - Logging
 - System validation
@@ -57,7 +53,7 @@ Responsibilities:
 
 Rules:
 
-Core must:
+Core must :
 - Never depend on modules
 - Never contain business logic
 - Remain minimal and stable
@@ -68,7 +64,7 @@ Core = infrastructure only.
 
 ## Layer 2 — Cognitive Layer (Brain)
 
-Directory:
+Directory :
 `lib/brain/`
 
 Components:
@@ -99,8 +95,7 @@ Responsibilities:
 Location:
 `lib/brain/context/`
 
-Components:
-
+Components :
 - resolver.sh
 - scorer.sh
 - session.sh
@@ -126,7 +121,7 @@ Score =
 Location:
 `lib/brain/think/`
 
-Components:
+Components :
 - engine.sh
 - ranker.sh
 
@@ -137,32 +132,32 @@ Dependencies:
 - memory/query.sh
 - context/session.sh
 
-Ranking formula:
+Ranking formula :
 composite_score =
 normalized_fts
 + focus_boost
++ graph_boostt
 
 ---
 
 ## Layer 3 — Modules
 
-Directory:
+Directory :
 `modules/`
 
 Modules provide **domain engines**.
 
-Current module:
+Current module :
 `modules/memory/`
 
 ---
 
 ## Memory Module
 
-Location:
+Location :
 `modules/memory/`
 
-Structure:
-
+Structure :
 
 memory/
 ├── engine/
@@ -177,8 +172,7 @@ memory/
 ├── gc.sh
 └── init.sh
 
-### Features:
-
+### Features :
 - SQLite WAL
 - FTS5 search
 - transactional indexing
@@ -188,25 +182,23 @@ memory/
 - graph adjacency queries
 - deterministic path traversal support
 
-### Modules must:
-
+### Modules must :
 - remain isolated
 - not mutate core
 - expose explicit interfaces
 
-### Graph Model
+## Graph Model
 
 The memory module persists explicit graph relations in the links table.
 
-Graph capabilities now include:
-
+Graph capabilities now include :
 - outgoing link inspection
 - backlinks inspection
 - direct neighbors inspection
 - path traversal over indexed markdown links
+- graph proximity queries
 
-Batch rebuild uses a two-pass strategy:
-
+Batch rebuild uses a two-pass strategy :
 1. notes / FTS / tags materialization
 2. graph link resolution
 
@@ -216,16 +208,14 @@ This guarantees forward links resolve correctly during deterministic rebuilds.
 
 ## Layer 4 — CLI Interface
 
-Directory:
+Directory :
 > bin/
 
-### Components:
-
+### Components :
 - bin/brain
 - bin/kaobox-shell
 
-### The CLI:
-
+### The CLI :
 - parses user commands
 - invokes the brain dispatcher
 - never accesses the database directly as business logic owner
@@ -234,11 +224,10 @@ Directory:
 
 ## Layer 5 — Runtime State
 
-### Directory:
+### Directory :
 > state/
 
-### Contains:
-
+### Contains :
 - version state
 - language state
 - runtime flags
@@ -249,11 +238,10 @@ Mutable by design.
 
 ## Layer 6 — Documentation
 
-### Directory:
+### Directory :
 > doc/
 
-### Contains:
-
+### Contains :
 - architecture
 - roadmap
 - phase history
@@ -266,8 +254,7 @@ Documentation is considered part of the system contract.
 
 ## Brain Graph Surface
 
-### Current graph-facing commands:
-
+### Current graph-facing commands :
 - brain graph <note>
 - brain backlinks <note>
 - brain neighbors <note>
@@ -316,12 +303,11 @@ Where most systems optimize UI, KaoBox optimizes structured cognition.
 
 ## Future Extensions
 
-- graph proximity ranking
 - semantic ranking layer
 - reinforcement signals
 - agent orchestration layer
 
 ## Status
 
-Phase 3.4 — Graph Navigation
-System Status: Stable Cognitive Kernel with Graph Traversal
+Phase 3.5 — Graph-Aware Cognition  
+System Status: Stable Cognitive Kernel with Graph Traversal and Graph-Aware Ranking
