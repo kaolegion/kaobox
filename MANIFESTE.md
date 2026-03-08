@@ -122,7 +122,7 @@ Le Brain fournit déjà :
 - stockage SQLite
 - FTS5
 - tags
-- graph markdown
+- graphe de liens markdown
 
 ## 5.2 Context Engine
 
@@ -163,6 +163,30 @@ normalized_fts
 
 The Brain now uses graph proximity as a cognitive relevance signal,
 not only as a navigation structure.
+
+---
+
+## 5.6 Graph Export Layer
+
+Le Brain expose désormais une couche d’export du graphe de connaissances.
+
+Implémentation actuelle :
+modules/memory/export.sh
+
+Capacité :
+export_graph_edges_tsv
+
+Format :
+source_path<TAB>target_path
+
+Propriétés :
+- export déterministe
+- couche en lecture seule
+- extraction du graphe contrôlée par le module mémoire
+- fondation pour visualisation et intégrations externes
+
+Cette couche permet d’exposer le graphe de connaissances à des outils externes
+tout en préservant les garanties de déterminisme de KaoBox.
 
 ---
 
@@ -248,8 +272,9 @@ Phase 1 → fondation
 Phase 2 → durcissement production  
 Phase 3 → intelligence opérationnelle
 Phase 3.4 → navigation graphe
-Phase 3.5 → cognition graphe-aware  
-Phase 4 → agents structurés  
+Phase 3.5 → cognition graphe-aware
+Phase 3.6 → fondation d’export du graphe
+Phase 4 → agents structurés
 Phase 5 → cognition distribuée  
 
 ---

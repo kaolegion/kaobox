@@ -60,17 +60,39 @@ to active cognitive ranking signal.
 
 Outcome :
 The markdown graph is now used as a **cognitive relevance signal**
-in addition to navigation..
+in addition to navigation.
 
 ---
 
-# Immediate (Phase 3.6 — Graph Expansion)
+# Phase 3.6 — Graph Expansion
+
+Goal: extend the Brain graph beyond navigation and cognition.
+
+---
+
+## DONE (Graph Export Groundwork)
+
+- [x] Canonical graph export module (`modules/memory/export.sh`)
+- [x] Deterministic edge export (`export_graph_edges_tsv`)
+- [x] Read-only export layer
+- [x] Deterministic ordering guarantees
+- [x] Export validation test (`test_graph_export.sh`)
+- [x] Integration into full test suite
+
+Outcome:
+
+KaoBox now exposes a **deterministic graph export surface**
+that external tools can consume.
+
+---
+
+## Immediate (Graph Expansion)
 
 - [ ] Configurable graph weighting
 - [ ] Path-aware context expansion
 - [ ] Related notes command based on graph distance
-- [ ] Graph export groundwork
-- [ ] Stronger ambiguous note resolution policy
+- [ ] Graph export CLI interface
+- [ ] Stronger ambiguous note resolution policyy
 
 ---
 

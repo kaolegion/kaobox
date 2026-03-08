@@ -136,7 +136,7 @@ Ranking formula :
 composite_score =
 normalized_fts
 + focus_boost
-+ graph_boostt
++ graph_boost
 
 ---
 
@@ -203,6 +203,42 @@ Batch rebuild uses a two-pass strategy :
 2. graph link resolution
 
 This guarantees forward links resolve correctly during deterministic rebuilds.
+
+---
+
+## Graph Export Layer (Phase 3.6)
+
+Location :
+`modules/memory/export.sh`
+
+Purpose :
+Provide a **canonical deterministic export surface** for the Brain graph.
+
+Current export capability :
+- `export_graph_edges_tsv`
+
+Output format:
+
+source_path<TAB>target_path
+
+Design properties :
+- read-only
+- deterministic ordering
+- module-owned graph extraction
+- reusable export foundation
+
+Architectural rule :
+Graph export logic **must remain inside the memory module**.
+
+The CLI must remain orchestration-only and must not duplicate graph extraction logic.
+
+Future renderers may include :
+- JSON graph export
+- Graphviz DOT export
+- visualization pipelines
+- timeline graph tools
+
+This layer allows KaoBox to expose its internal knowledge graph to external systems without breaking deterministic guarantees.
 
 ---
 
@@ -309,5 +345,7 @@ Where most systems optimize UI, KaoBox optimizes structured cognition.
 
 ## Status
 
-Phase 3.5 — Graph-Aware Cognition  
-System Status: Stable Cognitive Kernel with Graph Traversal and Graph-Aware Ranking
+Phase 3.6 — Graph Export (Groundwork)
+
+System Status:
+Stable Cognitive Kernel with Graph Traversal, Graph-Aware Ranking, and Deterministic Graph Export Foundation.
