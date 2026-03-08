@@ -346,6 +346,61 @@ SQL
 }
 
 # ----------------------------------------------------------
+# Graph Proximity Query
+# ----------------------------------------------------------
+# Input:
+#   note id
+# Output:
+#   id<TAB>path<TAB>title<TAB>distance
+#
+# Semantics:
+#   - direct graph neighbors only
+#   - union of outgoing and incoming links
+#   - deduplicated by note id
+#   - deterministic ordering by path asc
+#   - fixed distance = 1
+# ----------------------------------------------------------
+
+query_graph_proximity_by_note() {
+
+    [[ -n "${BRAIN_DB:-}" ]] || {
+        echo "[Query] BRAIN_DB not defined" >&2
+        return 1
+    }
+
+    local note_id="${1:-}"
+
+    [[ "$note_id" =~ ^[0-9]+$ ]] || {
+        echo "[Query] Invalid note id: $note_id" >&2
+        return 1
+    }
+
+    _sqlite_exec <<SQL
+.parameter init
+.parameter set @id "$note_id"
+WITH direct_neighbors AS (
+    SELECT l.target_id AS neighbor_id
+    FROM links l
+    WHERE l.source_id = @id
+
+    UNION
+
+    SELECT l.source_id AS neighbor_id
+    FROM links l
+    WHERE l.target_id = @id
+)
+SELECT n.id,
+       n.path,
+       n.title,
+       1 AS distance
+FROM direct_neighbors d
+JOIN notes n ON n.id = d.neighbor_id
+WHERE n.id <> @id
+ORDER BY n.path ASC;
+SQL
+}
+
+# ----------------------------------------------------------
 # Graph Adjacency Query
 # ----------------------------------------------------------
 # Input:

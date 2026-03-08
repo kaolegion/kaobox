@@ -33,4 +33,7 @@ brain neighbors test >/dev/null || true
 echo "[TEST] brain path"
 brain path test-modular test >/dev/null || true
 
+echo "[TEST] brain think"
+brain think test >/dev/null || true
+
 echo "[PASS] Brain CLI smoke test passed"
