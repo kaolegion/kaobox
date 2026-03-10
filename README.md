@@ -52,7 +52,7 @@ Main layers :
 Track: **v2.9**
 
 Current phase :
-**Phase 3.7 — Graph Exploitation**
+**Phase 3.8 — Graph Expansion**
 
 ## Delivered capabilities
 
@@ -79,9 +79,15 @@ Current phase :
 - context-aware ranking
 - focus-aware search
 - graph-aware ranking
+- configurable graph weighting
 
 Ranking model :
 composite = normalized_fts + focus_boost + graph_boost
+
+Runtime graph weighting supports:
+- default graph boost via `THINK_GRAPH_BOOST`
+- runtime override via `BRAIN_THINK_GRAPH_BOOST`
+- deterministic fallback to `THINK_GRAPH_BOOST` when override is invalid
 
 ---
 
@@ -152,6 +158,7 @@ The test suite validates :
 - graph proximity
 - graph related command
 - graph-aware ranking
+- configurable graph weighting override/fallback
 - graph export determinism
 - graph export CLI surface
 - CLI smoke commands

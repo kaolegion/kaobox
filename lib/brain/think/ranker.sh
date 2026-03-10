@@ -58,9 +58,21 @@ _extract_score() {
     printf "%s\n" "$line" | awk '{print $NF}'
 }
 
+_resolve_graph_boost_weight() {
+    local override_value="${BRAIN_THINK_GRAPH_BOOST:-}"
+
+    if [[ -n "$override_value" && "$override_value" =~ ^[0-9]+$ ]]; then
+        printf "%s\n" "$override_value"
+        return 0
+    fi
+
+    printf "%s\n" "$THINK_GRAPH_BOOST"
+}
+
 graph_boost_for_path() {
     local candidate_path="${1:-}"
     local graph_paths="${2:-}"
+    local resolved_graph_boost=""
 
     [[ -n "$candidate_path" ]] || {
         printf "0\n"
@@ -72,11 +84,13 @@ graph_boost_for_path() {
         return 0
     }
 
+    resolved_graph_boost="$(_resolve_graph_boost_weight)"
+
     while IFS= read -r path; do
         [[ -n "$path" ]] || continue
 
         if [[ "$path" == "$candidate_path" ]]; then
-            printf "%s\n" "$THINK_GRAPH_BOOST"
+            printf "%s\n" "$resolved_graph_boost"
             return 0
         fi
     done <<< "$graph_paths"

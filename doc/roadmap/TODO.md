@@ -1,7 +1,7 @@
 # KaoBox TODO
 
 Version: v2.9
-Aligned with Phase 3.7 completion
+Aligned with Phase 3.8.a completion
 
 ---
 
@@ -119,13 +119,40 @@ built on top of direct graph proximity.
 
 ---
 
+# DONE (Phase 3.8.a — Configurable Graph Weighting)
+
+Goal achieved: make graph weighting configurable without breaking the
+existing ranking contract.
+
+## Delivered
+
+- [x] Runtime graph boost override via `BRAIN_THINK_GRAPH_BOOST`
+- [x] Deterministic fallback to `THINK_GRAPH_BOOST`
+- [x] No change to Think Engine orchestration contract
+- [x] No CLI surface change
+- [x] Additive implementation in `lib/brain/think/ranker.sh`
+
+## Tests
+
+- [x] `test_think_graph_boost.sh` extended
+- [x] Default graph boost preserved
+- [x] Runtime override validated
+- [x] Invalid override fallback validated
+- [x] Global test suite passed
+
+Outcome:
+
+KaoBox now supports **configurable graph weighting**
+while preserving deterministic ranking behavior.
+
+---
+
 # Phase 3.8 — Graph Expansion
 
 Goal: deepen graph exploitation beyond direct related notes.
 
-## Planned
+## Remaining
 
-- [ ] Configurable graph weighting
 - [ ] Path-aware context expansion
 - [ ] Stronger ambiguous note resolution policy
 

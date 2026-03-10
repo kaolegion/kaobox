@@ -263,17 +263,17 @@ source_path<TAB>target_path
 
 - `test_graph_export.sh`
 - `test_graph_export_cli.sh`
-- CLI smoke validation extended
-- full suite integration completed
+- CLI smoke test updated
+- global test suite updated
 
 Architectural Impact :
-- Brain graph became exportable through a stable module-owned surface
-- Export logic remained isolated inside the memory module
-- CLI exposure preserved orchestration-only boundaries
+- Graph became exportable as a reusable deterministic surface
+- Export logic remained module-owned
+- CLI preserved orchestration-only responsibilities
 
 Impact :
 KaoBox moved from graph-aware cognition
-to **graph exportability**.
+to **deterministic graph export**.
 
 ---
 
@@ -283,22 +283,49 @@ Date : 2026-03-10
 
 Delivered :
 - `brain related <note>`
-- direct reuse of `query_graph_proximity_by_note`
-- deterministic direct related note rendering
-- read-only CLI surface
+- direct reuse of graph proximity query API
+- deterministic direct related notes surface
 - CLI remains orchestration-only
 
-### Tests
-
+Tests :
 - `test_graph_related.sh`
-- CLI smoke validation extended with `brain related`
-- full suite integration completed
+- CLI smoke test extended with `brain related`
+- global test suite updated
 
 Architectural Impact :
-- Direct graph proximity is now exposed as a stable user-facing command
-- Graph exploitation increased without modifying indexing or storage layers
-- Memory query ownership remained preserved
+- Direct graph proximity became a first-class user-facing navigation command
+- Existing graph query primitives were reused without duplicating graph logic
+- CLI remained a thin orchestration surface
 
 Impact :
-KaoBox moved from graph exportability
+KaoBox moved from graph export
 to **direct graph exploitation**.
+
+---
+
+## Phase 3.8.a — Configurable Graph Weighting ✅
+
+Date : 2026-03-10
+
+Delivered :
+- runtime graph boost override via `BRAIN_THINK_GRAPH_BOOST`
+- deterministic fallback to `THINK_GRAPH_BOOST`
+- additive ranker-only implementation
+- no Think Engine orchestration change
+- no CLI contract change
+
+Tests :
+- `test_think_graph_boost.sh` extended
+- default graph boost preserved
+- runtime override validated
+- invalid override fallback validated
+- global test suite passed
+
+Architectural Impact :
+- Graph weighting became runtime-configurable
+- Existing ranking model remained stable
+- Deterministic behavior was preserved through bounded override resolution
+
+Impact :
+KaoBox moved from direct graph exploitation
+to **configurable graph-aware ranking**.

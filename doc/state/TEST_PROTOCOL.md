@@ -1,7 +1,7 @@
 # KaoBox Test Protocol
 
 Version: v2.9
-Aligned with Phase 3.7 graph exploitation
+Aligned with Phase 3.8.a configurable graph weighting
 
 A version can be validated only if all checks pass.
 
@@ -153,13 +153,19 @@ Checks :
 - Focus boost applied to active session
 - Graph proximity boost applied when neighbors match
 - Ranking stable across repeated queries
+- Default graph boost remains stable
+- `BRAIN_THINK_GRAPH_BOOST` override is applied only when valid
+- Invalid `BRAIN_THINK_GRAPH_BOOST` falls back deterministically to `THINK_GRAPH_BOOST`
 
 Verification :
 brain think <query>
+./tests/test_think_graph_boost.sh
 
 Expected :
 - results sorted by composite score
 - active session note boosted
+- graph neighbor receives graph boost
+- runtime graph weighting remains bounded and deterministic
 
 ---
 
@@ -258,15 +264,3 @@ Failure of any check blocks release.
 
 The following scripts must pass :
 ./tests/run_all.sh
-
-Which includes :
-- test_logger.sh
-- test_memory_index.sh
-- test_graph_navigation.sh
-- test_graph_path.sh
-- test_graph_proximity.sh
-- test_graph_related.sh
-- test_graph_export.sh
-- test_graph_export_cli.sh
-- test_think_graph_boost.sh
-- test_brain_cli.sh
