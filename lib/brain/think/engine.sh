@@ -2,7 +2,7 @@
 
 # ==========================================================
 # KaoBox Brain - Think Engine
-# Orchestration Layer v1.2
+# Orchestration Layer v1.3
 # ----------------------------------------------------------
 # Responsibilities:
 #   - resolve active cognitive focus
@@ -38,17 +38,24 @@ _resolve_focus_note_id() {
     printf "%s\n" "$resolved" | awk -F'\t' '{print $1}'
 }
 
-_load_graph_paths_from_focus() {
+_load_graph_context_from_focus() {
     local focus_path="${1:-}"
     local focus_id=""
 
     [[ -n "${focus_path:-}" ]] || return 0
 
     focus_id="$(_resolve_focus_note_id "$focus_path")"
-
     [[ -n "${focus_id:-}" ]] || return 0
 
-    query_graph_proximity_by_note "$focus_id" | awk -F'\t' '{print $2}'
+    query_graph_context_by_note "$focus_id" 3
+}
+
+_load_graph_paths_from_context() {
+    local graph_context="${1:-}"
+
+    [[ -n "${graph_context:-}" ]] || return 0
+
+    printf "%s\n" "$graph_context" | awk -F'\t' 'NF >= 2 {print $2}'
 }
 
 # ==========================================================
@@ -69,8 +76,11 @@ think_engine_run() {
     # ------------------------------------------------------
     # Graph context expansion
     # ------------------------------------------------------
+    local graph_context=""
     local graph_paths=""
-    graph_paths="$(_load_graph_paths_from_focus "$active_focus")"
+
+    graph_context="$(_load_graph_context_from_focus "$active_focus")"
+    graph_paths="$(_load_graph_paths_from_context "$graph_context")"
 
     # ------------------------------------------------------
     # FTS retrieval (raw layer)
@@ -86,6 +96,7 @@ think_engine_run() {
     # ------------------------------------------------------
     # Ranking (cognitive layer)
     # ------------------------------------------------------
+    THINK_GRAPH_CONTEXT="$graph_context" \
     THINK_GRAPH_PATHS="$graph_paths" \
     think_rank_results "$active_focus" "${fts_results[@]}" \
         | while IFS='|' read -r _ raw; do

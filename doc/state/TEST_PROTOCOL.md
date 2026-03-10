@@ -1,7 +1,7 @@
 # KaoBox Test Protocol
 
 Version: v2.9
-Aligned with Phase 3.8.a configurable graph weighting
+Aligned with Phase 3.8.b path-aware context expansion
 
 A version can be validated only if all checks pass.
 
@@ -152,6 +152,10 @@ Checks :
 - Composite ranking applied
 - Focus boost applied to active session
 - Graph proximity boost applied when neighbors match
+- Path-aware graph context expansion applied from active focus
+- Distance-aware graph weighting remains bounded and deterministic
+- Distance 1 path results preserve strongest graph signal
+- Distance 2 and distance 3 path results remain eligible through decayed graph weighting
 - Ranking stable across repeated queries
 - Default graph boost remains stable
 - `BRAIN_THINK_GRAPH_BOOST` override is applied only when valid
@@ -164,8 +168,10 @@ brain think <query>
 Expected :
 - results sorted by composite score
 - active session note boosted
-- graph neighbor receives graph boost
+- direct graph neighbor receives strongest graph boost
+- indirect path results are eligible through bounded path-aware expansion
 - runtime graph weighting remains bounded and deterministic
+- direct graph boost compatibility remains preserved
 
 ---
 
@@ -257,10 +263,3 @@ All checks must pass before :
 - Documentation freeze
 
 Failure of any check blocks release.
-
----
-
-# Automated Test Suite
-
-The following scripts must pass :
-./tests/run_all.sh

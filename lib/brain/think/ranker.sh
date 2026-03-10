@@ -2,7 +2,7 @@
 
 # ==========================================================
 # KaoBox Brain - Think Ranker
-# Composite Scoring v1.3
+# Composite Scoring v1.4
 # ----------------------------------------------------------
 # Score model:
 #   composite = relevance + focus_boost + graph_boost
@@ -13,7 +13,8 @@
 # Notes:
 #   - raw FTS bm25 score is typically negative
 #   - relevance is normalized as positive: -1 * raw_score
-#   - graph neighbors are provided via THINK_GRAPH_PATHS
+#   - THINK_GRAPH_PATHS keeps direct binary compatibility
+#   - THINK_GRAPH_CONTEXT enables path-aware distance scoring
 # ==========================================================
 
 [[ -n "${BRAIN_THINK_RANKER_LOADED:-}" ]] && return 0
@@ -25,6 +26,7 @@ readonly BRAIN_THINK_RANKER_LOADED=1
 : "${THINK_FOCUS_BOOST:=5}"
 : "${THINK_GRAPH_BOOST:=2}"
 : "${THINK_GRAPH_PATHS:=}"
+: "${THINK_GRAPH_CONTEXT:=}"
 
 # ==========================================================
 # Helpers
@@ -69,6 +71,31 @@ _resolve_graph_boost_weight() {
     printf "%s\n" "$THINK_GRAPH_BOOST"
 }
 
+_resolve_graph_boost_for_distance() {
+    local distance="${1:-0}"
+    local base_weight=""
+    local computed=0
+
+    [[ "$distance" =~ ^[0-9]+$ ]] || {
+        printf "0\n"
+        return 0
+    }
+
+    (( distance >= 1 )) || {
+        printf "0\n"
+        return 0
+    }
+
+    base_weight="$(_resolve_graph_boost_weight)"
+    computed=$(( base_weight - distance + 1 ))
+
+    if (( computed < 1 )); then
+        computed=1
+    fi
+
+    printf "%s\n" "$computed"
+}
+
 graph_boost_for_path() {
     local candidate_path="${1:-}"
     local graph_paths="${2:-}"
@@ -98,6 +125,34 @@ graph_boost_for_path() {
     printf "0\n"
 }
 
+graph_boost_for_context_path() {
+    local candidate_path="${1:-}"
+    local graph_context="${2:-}"
+    local path=""
+    local distance=""
+
+    [[ -n "$candidate_path" ]] || {
+        printf "0\n"
+        return 0
+    }
+
+    [[ -n "$graph_context" ]] || {
+        printf "0\n"
+        return 0
+    }
+
+    while IFS=$'\t' read -r _ path _ distance; do
+        [[ -n "${path:-}" ]] || continue
+
+        if [[ "$path" == "$candidate_path" ]]; then
+            _resolve_graph_boost_for_distance "$distance"
+            return 0
+        fi
+    done <<< "$graph_context"
+
+    printf "0\n"
+}
+
 # ==========================================================
 # Ranking Function
 # ==========================================================
@@ -107,7 +162,9 @@ graph_boost_for_path() {
 # Optional graph context:
 #   THINK_GRAPH_PATHS="/path/a.md
 #   /path/b.md"
-#   think_rank_results "$focus_path" "${results[@]}"
+#
+#   THINK_GRAPH_CONTEXT="1<TAB>/path/a.md<TAB>Title A<TAB>1
+#   2<TAB>/path/b.md<TAB>Title B<TAB>2"
 # ==========================================================
 
 think_rank_results() {
@@ -138,7 +195,11 @@ think_rank_results() {
             focus_boost="$THINK_FOCUS_BOOST"
         fi
 
-        graph_boost="$(graph_boost_for_path "$path" "$THINK_GRAPH_PATHS")"
+        if [[ -n "${THINK_GRAPH_CONTEXT:-}" ]]; then
+            graph_boost="$(graph_boost_for_context_path "$path" "$THINK_GRAPH_CONTEXT")"
+        else
+            graph_boost="$(graph_boost_for_path "$path" "$THINK_GRAPH_PATHS")"
+        fi
 
         composite="$(awk "BEGIN { print ($relevance) + ($focus_boost) + ($graph_boost) }")"
 

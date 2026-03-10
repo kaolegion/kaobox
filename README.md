@@ -73,6 +73,7 @@ Current phase :
 - path traversal (BFS)
 - graph proximity queries
 - graph export
+- bounded graph context expansion
 
 ### Think engine
 
@@ -80,6 +81,7 @@ Current phase :
 - focus-aware search
 - graph-aware ranking
 - configurable graph weighting
+- path-aware context expansion
 
 Ranking model :
 composite = normalized_fts + focus_boost + graph_boost
@@ -88,6 +90,18 @@ Runtime graph weighting supports:
 - default graph boost via `THINK_GRAPH_BOOST`
 - runtime override via `BRAIN_THINK_GRAPH_BOOST`
 - deterministic fallback to `THINK_GRAPH_BOOST` when override is invalid
+
+Path-aware context expansion supports:
+- bounded traversal depth from active focus
+- deterministic shortest-path context discovery
+- distance-aware graph weighting
+- compatibility with existing direct graph boost behavior
+
+Current path-aware graph weighting semantics:
+- distance 1 → full graph boost
+- distance 2 → decayed graph boost
+- distance 3 → decayed graph boost
+- bounded minimum boost remains deterministic
 
 ---
 
@@ -157,8 +171,10 @@ The test suite validates :
 - graph navigation
 - graph proximity
 - graph related command
+- graph path traversal
 - graph-aware ranking
 - configurable graph weighting override/fallback
+- path-aware context expansion
 - graph export determinism
 - graph export CLI surface
 - CLI smoke commands

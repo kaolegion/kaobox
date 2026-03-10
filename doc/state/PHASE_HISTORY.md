@@ -329,3 +329,35 @@ Architectural Impact :
 Impact :
 KaoBox moved from direct graph exploitation
 to **configurable graph-aware ranking**.
+
+---
+
+## Phase 3.8.b — Path-Aware Context Expansion ✅
+
+Date : 2026-03-10
+
+Delivered :
+- bounded graph context query API (`query_graph_context_by_note`)
+- deterministic BFS shortest-path expansion from active focus
+- Think Engine support for path-aware graph context
+- distance-aware graph weighting in ranker
+- compatibility preserved with direct graph boost behavior
+- no CLI contract change
+
+Tests :
+- `test_think_graph_boost.sh` extended
+- direct neighbor ranking preserved
+- indirect path ranking validated
+- distance-aware weighting validated
+- runtime override compatibility validated
+- global test suite passed
+
+Architectural Impact :
+- Think Engine now expands graph context beyond direct neighbors
+- Path-derived context remains module-owned and deterministically bounded
+- Ranking model now integrates graph distance without breaking existing direct proximity behavior
+
+Impact :
+KaoBox moved from configurable graph-aware ranking
+to **path-aware cognitive expansion**.
+

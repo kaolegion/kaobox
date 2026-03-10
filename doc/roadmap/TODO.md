@@ -1,7 +1,7 @@
 # KaoBox TODO
 
 Version: v2.9
-Aligned with Phase 3.8.a completion
+Aligned with Phase 3.8.b completion
 
 ---
 
@@ -147,13 +147,43 @@ while preserving deterministic ranking behavior.
 
 ---
 
+# DONE (Phase 3.8.b — Path-Aware Context Expansion)
+
+Goal achieved: extend graph-aware cognition beyond direct neighbors
+through bounded path-aware context expansion.
+
+## Delivered
+
+- [x] Bounded graph context query API (`query_graph_context_by_note`)
+- [x] Deterministic BFS shortest-path expansion from active focus
+- [x] Think Engine support for path-aware graph context
+- [x] Distance-aware graph weighting in ranker
+- [x] Compatibility preserved with existing direct graph boost behavior
+- [x] No CLI contract change
+- [x] CLI remains orchestration-only
+
+## Tests
+
+- [x] `test_think_graph_boost.sh` extended
+- [x] Direct neighbor ranking preserved
+- [x] Indirect path results validated
+- [x] Distance-aware weighting validated
+- [x] Runtime override remains compatible
+- [x] Global test suite passed
+
+Outcome:
+
+KaoBox now supports **bounded path-aware cognitive expansion**
+while preserving deterministic ranking behavior.
+
+---
+
 # Phase 3.8 — Graph Expansion
 
 Goal: deepen graph exploitation beyond direct related notes.
 
 ## Remaining
 
-- [ ] Path-aware context expansion
 - [ ] Stronger ambiguous note resolution policy
 
 ---

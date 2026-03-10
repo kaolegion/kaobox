@@ -435,3 +435,93 @@ WHERE l.source_id = @id
 ORDER BY n.path ASC;
 SQL
 }
+
+# ----------------------------------------------------------
+# Graph Context Query
+# ----------------------------------------------------------
+# Input:
+#   note id
+#   optional max depth (default: 3)
+# Output:
+#   id<TAB>path<TAB>title<TAB>distance
+#
+# Semantics:
+#   - outgoing traversal only
+#   - BFS shortest-path expansion
+#   - deterministic adjacency order via path asc
+#   - deterministic final ordering: distance asc, path asc
+# ----------------------------------------------------------
+
+query_graph_context_by_note() {
+
+    [[ -n "${BRAIN_DB:-}" ]] || {
+        echo "[Query] BRAIN_DB not defined" >&2
+        return 1
+    }
+
+    local note_id="${1:-}"
+    local max_depth="${2:-3}"
+
+    [[ "$note_id" =~ ^[0-9]+$ ]] || {
+        echo "[Query] Invalid note id: $note_id" >&2
+        return 1
+    }
+
+    [[ "$max_depth" =~ ^[0-9]+$ ]] || max_depth="3"
+    (( max_depth >= 1 )) || max_depth=1
+
+    declare -A visited=()
+    declare -A node_distance=()
+    declare -A node_path=()
+    declare -A node_title=()
+
+    local -a queue_ids=()
+    local -a queue_depths=()
+
+    local head=0
+    local current_id=""
+    local current_depth=""
+    local next_id=""
+    local next_path=""
+    local next_title=""
+    local discovered_id=""
+
+    visited["$note_id"]=1
+    queue_ids+=("$note_id")
+    queue_depths+=(0)
+
+    while (( head < ${#queue_ids[@]} )); do
+        current_id="${queue_ids[$head]}"
+        current_depth="${queue_depths[$head]}"
+        head=$((head + 1))
+
+        if (( current_depth >= max_depth )); then
+            continue
+        fi
+
+        while IFS=$'\t' read -r next_id next_path next_title; do
+            [[ -n "${next_id:-}" ]] || continue
+            [[ "$next_id" =~ ^[0-9]+$ ]] || continue
+
+            if [[ -n "${visited[$next_id]:-}" ]]; then
+                continue
+            fi
+
+            visited["$next_id"]=1
+            node_distance["$next_id"]=$((current_depth + 1))
+            node_path["$next_id"]="$next_path"
+            node_title["$next_id"]="$next_title"
+
+            queue_ids+=("$next_id")
+            queue_depths+=($((current_depth + 1)))
+        done < <(query_adjacent_note_ids "$current_id")
+    done
+
+    for discovered_id in "${!node_distance[@]}"; do
+        printf "%s\t%s\t%s\t%s\n" \
+            "$discovered_id" \
+            "${node_path[$discovered_id]}" \
+            "${node_title[$discovered_id]}" \
+            "${node_distance[$discovered_id]}"
+    done | sort -t $'\t' -k4,4n -k2,2
+}
