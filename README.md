@@ -22,14 +22,15 @@ Main entrypoint :
 > brain <command>
 
 Examples :
-brain status  
-brain search "query"  
-brain think "query"  
-brain graph test  
-brain backlinks test  
-brain neighbors test  
-brain path test-modular test  
-brain export graph  
+brain status
+brain search "query"
+brain think "query"
+brain graph test
+brain backlinks test
+brain neighbors test
+brain related test
+brain path test-modular test
+brain export graph
 brain reindex
 
 ---
@@ -51,7 +52,7 @@ Main layers :
 Track: **v2.9**
 
 Current phase :
-**Phase 3.6 — Graph Export (CLI Exposure)**
+**Phase 3.7 — Graph Exploitation**
 
 ## Delivered capabilities
 
@@ -68,8 +69,10 @@ Current phase :
 - graph navigation
 - backlinks
 - neighbors
+- related notes
 - path traversal (BFS)
 - graph proximity queries
+- graph export
 
 ### Think engine
 
@@ -84,12 +87,16 @@ composite = normalized_fts + focus_boost + graph_boost
 
 # Graph Commands
 
-brain graph <note>  
-brain backlinks <note>  
-brain neighbors <note>  
+brain graph <note>
+brain backlinks <note>
+brain neighbors <note>
+brain related <note>
 brain path <from_note> <to_note>
 
 These commands operate on the indexed markdown graph stored in the memory engine.
+
+`brain related <note>` exposes deterministic direct graph proximity
+as a read-only CLI surface.
 
 ---
 
@@ -110,8 +117,8 @@ modules/memory/export.sh
 Current canonical export :
 export_graph_edges_tsv
 
-
 ### Output format
+
 source_path<TAB>target_path
 
 ### Properties
@@ -143,6 +150,7 @@ The test suite validates :
 - memory indexing
 - graph navigation
 - graph proximity
+- graph related command
 - graph-aware ranking
 - graph export determinism
 - graph export CLI surface

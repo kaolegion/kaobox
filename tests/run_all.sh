@@ -36,6 +36,9 @@ echo "[RUN] test_graph_path.sh"
 echo "[RUN] test_graph_proximity.sh"
 ./tests/test_graph_proximity.sh
 
+echo "[RUN] test_graph_related.sh"
+./tests/test_graph_related.sh
+
 echo "[RUN] test_graph_export.sh"
 ./tests/test_graph_export.sh
 

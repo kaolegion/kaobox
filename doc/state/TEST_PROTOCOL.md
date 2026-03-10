@@ -1,7 +1,7 @@
 # KaoBox Test Protocol
 
-Version: v2.9  
-Aligned with Phase 3.6 graph export CLI surface
+Version: v2.9
+Aligned with Phase 3.7 graph exploitation
 
 A version can be validated only if all checks pass.
 
@@ -61,6 +61,7 @@ Verification:
 brain graph <note>
 brain backlinks <note>
 brain neighbors <note>
+brain related <note>
 brain path <a> <b>
 query_graph_proximity_by_note <note_id>
 sqlite3 "$BRAIN_DB" "SELECT COUNT(*) FROM links;"
@@ -80,6 +81,7 @@ Checks :
 - `brain graph <note>` resolves outgoing and incoming edges
 - `brain backlinks <note>` returns incoming links
 - `brain neighbors <note>` returns direct graph neighbors
+- `brain related <note>` returns deterministic direct graph proximity
 - `brain path <a> <b>` returns a deterministic traversal when a path exists
 - Two-pass batch reindex resolves forward links correctly
 - Graph proximity query returns deterministic neighbors
@@ -88,6 +90,7 @@ Verification :
 brain graph <note>
 brain backlinks <note>
 brain neighbors <note>
+brain related <note>
 brain path <a> <b>
 sqlite3 brain.db "SELECT COUNT(*) FROM links;"
 
@@ -111,7 +114,7 @@ Verification :
 
 export_graph_edges_tsv
 
-brain export graph  
+brain export graph
 brain export graph --format tsv
 
 Expected :
@@ -228,6 +231,7 @@ Checks :
 - Context query twice → identical ordering
 - Think query twice → identical ranking
 - Graph query twice → identical ordering
+- Related query twice → identical ordering
 - Path query twice → identical traversal
 - No hidden runtime memory
 - No implicit global mutation
@@ -261,6 +265,7 @@ Which includes :
 - test_graph_navigation.sh
 - test_graph_path.sh
 - test_graph_proximity.sh
+- test_graph_related.sh
 - test_graph_export.sh
 - test_graph_export_cli.sh
 - test_think_graph_boost.sh

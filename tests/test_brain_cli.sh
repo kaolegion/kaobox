@@ -51,6 +51,9 @@ brain backlinks test >/dev/null || true
 echo "[TEST] brain neighbors"
 brain neighbors test >/dev/null || true
 
+echo "[TEST] brain related"
+brain related test >/dev/null || true
+
 echo "[TEST] brain path"
 brain path test-modular test >/dev/null || true
 

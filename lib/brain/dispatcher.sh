@@ -104,6 +104,7 @@ Graph:
   brain graph <note>
   brain backlinks <note>
   brain neighbors <note>
+  brain related <note>
   brain path <from_note> <to_note>
 
 Export:
@@ -270,6 +271,13 @@ brain_dispatch() {
             safe_source "$MEMORY_QUERY"
             load_command "neighbors.sh"
             cmd_neighbors "$@"
+            ;;
+
+        related)
+            preflight_check
+            safe_source "$MEMORY_QUERY"
+            load_command "related.sh"
+            cmd_related "$@"
             ;;
 
         path)

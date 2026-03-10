@@ -1,13 +1,13 @@
 # KaoBox Phase History
 
-This document tracks architectural milestones.  
+This document tracks architectural milestones.
 Each phase represents a structural evolution of the system.
 
 ---
 
 # Phase 1 — Structural Foundation ✅
 
-Version : v1.0.0-alpha  
+Version : v1.0.0-alpha
 Status : COMPLETED
 
 ## Scope
@@ -37,8 +37,8 @@ Status : COMPLETED
 
 # Phase 2 — Production Hardening (Brain v2.8) ✅
 
-Version : v2.8  
-Status : COMPLETED  
+Version : v2.8
+Status : COMPLETED
 Branch : release/brain-v2.8
 
 ## Scope
@@ -106,7 +106,7 @@ CLI became a thin orchestration layer.
 ## Phase 3.2 — Context & Think Engine ✅
 
 Location :
-lib/brain/context/  
+lib/brain/context/
 lib/brain/think/
 
 ### Context Engine
@@ -258,88 +258,47 @@ source_path<TAB>target_path
 - `brain export graph`
 - `brain export graph --format tsv`
 - CLI remains orchestration-only
-- export logic remains module-owned
 
-### Test Coverage
+### Tests
 
-- export validation test:
-  - `test_graph_export.sh`
-- CLI export integration test:
-  - `test_graph_export_cli.sh`
-- CLI smoke test extended
-- global test suite updated
+- `test_graph_export.sh`
+- `test_graph_export_cli.sh`
+- CLI smoke validation extended
+- full suite integration completed
 
 Architectural Impact :
-
-- Introduced a canonical graph export surface
-- Export responsibility remains inside the memory module
-- CLI exposes export without duplicating logic
-- External tools can consume the Brain graph deterministically
+- Brain graph became exportable through a stable module-owned surface
+- Export logic remained isolated inside the memory module
+- CLI exposure preserved orchestration-only boundaries
 
 Impact :
-
-KaoBox now exposes its internal knowledge graph
-through a **deterministic CLI-accessible export interface**.
-
----
-
-# Phase 4 — Adaptive Layer (Planned)
-
-Goal:
-
-Extend contextual intelligence toward structured agent behavior.
-
-Planned capabilities :
-- Hybrid semantic ranking (FTS + graph)
-- Cross-note reinforcement signals
-- Multi-module orchestration
-- Structured task planning
-- Controlled execution graphs
-
-Constraint :
-Core must remain deterministic.  
-Adaptation must remain modular.
+KaoBox moved from graph-aware cognition
+to **graph exportability**.
 
 ---
 
-# Phase 5 — Distributed Brain (Vision)
+## Phase 3.7 — Graph Exploitation ✅
 
-Long-term evolution :
-- Multi-instance coordination
-- State replication
-- Remote orchestration
-- Snapshot & recovery model
-- External toolchain integration
+Date : 2026-03-10
 
----
+Delivered :
+- `brain related <note>`
+- direct reuse of `query_graph_proximity_by_note`
+- deterministic direct related note rendering
+- read-only CLI surface
+- CLI remains orchestration-only
 
-# Architectural Trajectory
+### Tests
 
-Phase 1 → Deterministic Foundation  
-Phase 2 → Infrastructure Hardening  
-Phase 3 → Contextual Intelligence  
-Phase 3.4 → Graph Navigation  
-Phase 3.5 → Graph-Aware Cognition  
-Phase 3.6 → Graph Export Foundation  
-Phase 4 → Structured Adaptation  
-Phase 5 → Distributed Cognition  
+- `test_graph_related.sh`
+- CLI smoke validation extended with `brain related`
+- full suite integration completed
 
----
+Architectural Impact :
+- Direct graph proximity is now exposed as a stable user-facing command
+- Graph exploitation increased without modifying indexing or storage layers
+- Memory query ownership remained preserved
 
-# Current Position
-
-Infrastructure: Stable  
-Memory Engine: Production-grade  
-Context Engine: Operational  
-Observability: Integrated  
-Graph Navigation: Integrated  
-Graph Cognition: Integrated  
-Graph Export: CLI surface implemented  
-Agent Layer: Emerging  
-
-KaoBox has transitioned from a structural system
-to a **deterministic cognitive infrastructure** capable of:
-
-- contextual retrieval
-- graph-aware reasoning
-- deterministic graph export
+Impact :
+KaoBox moved from graph exportability
+to **direct graph exploitation**.

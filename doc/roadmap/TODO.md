@@ -1,7 +1,7 @@
 # KaoBox TODO
 
-Version: v2.9  
-Aligned with Phase 3.6 completion
+Version: v2.9
+Aligned with Phase 3.7 completion
 
 ---
 
@@ -48,7 +48,7 @@ to active cognitive ranking signal.
 - [x] Graph proximity query API (`query_graph_proximity_by_note`)
 - [x] Graph context expansion in Think Engine
 - [x] Graph proximity boost in ranking model
-- [x] Composite ranking model implemented : 
+- [x] Composite ranking model implemented :
 normalized_fts + focus_boost + graph_boost
 
 - [x] Deterministic integration with existing ranking pipeline
@@ -95,15 +95,38 @@ accessible through the Brain CLI and reusable by external tools.
 
 ---
 
-# Phase 3.7 — Graph Expansion
+# DONE (Phase 3.7 — Graph Exploitation)
 
-Goal: deepen graph exploitation beyond export.
+Goal achieved: expose direct graph proximity as a user-facing navigation command.
+
+## Delivered
+
+- [x] `brain related <note>`
+- [x] Direct reuse of graph proximity query API
+- [x] Read-only deterministic related notes surface
+- [x] CLI remains orchestration-only
+
+## Tests
+
+- [x] Related command validation test (`test_graph_related.sh`)
+- [x] CLI smoke test extended with `brain related`
+- [x] Global test suite updated
+
+Outcome:
+
+KaoBox now exposes a **deterministic related notes command**
+built on top of direct graph proximity.
+
+---
+
+# Phase 3.8 — Graph Expansion
+
+Goal: deepen graph exploitation beyond direct related notes.
 
 ## Planned
 
 - [ ] Configurable graph weighting
 - [ ] Path-aware context expansion
-- [ ] Related notes command based on graph distance
 - [ ] Stronger ambiguous note resolution policy
 
 ---
