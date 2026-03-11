@@ -320,38 +320,34 @@ Delivered :
 - compatibility with prior direct graph boost behavior
 
 Architectural Impact :
-- Graph cognition expanded beyond direct neighbors
-- Active focus now propagates bounded path-aware graph context
+- Think Engine gained bounded graph traversal awareness
+- Graph-derived ranking became distance-sensitive while remaining deterministic
 
 Impact :
-KaoBox gained bounded path-aware graph cognition.
+KaoBox moved from direct graph cognition to bounded path-aware cognition.
 
 ---
 
 ## Phase 3.8.c — Ambiguous Note Resolution Policy ✅
 
-Date : 2026-03-11
+Date : 2026-03-10
 
 Delivered :
 - strict resolver candidate ranking in `modules/memory/query.sh`
-- explicit deterministic rejection of ambiguous best-match references
+- explicit deterministic ambiguous note rejection
 - resolver error propagation through:
   - `brain graph`
   - `brain backlinks`
   - `brain neighbors`
   - `brain related`
   - `brain path`
-- dedicated resolver contract validation test (`test_note_ref_resolution.sh`)
-- ambiguous note rejection coverage in `test_graph_related.sh`
 
 Architectural Impact :
-- Graph-facing note resolution is no longer silently permissive
-- Resolver ambiguity became explicit, bounded, and deterministic
-- CLI graph surfaces now preserve resolver contract fidelity
+- Graph-facing note resolution became contractually strict
+- CLI surfaces stopped silently collapsing ambiguous references
 
 Impact :
-KaoBox strengthened graph-facing correctness by replacing silent ambiguous fallback
-with deterministic rejection and explicit operator feedback.
+KaoBox gained deterministic ambiguity control for graph-facing note resolution.
 
 ---
 
@@ -361,24 +357,41 @@ Date : 2026-03-11
 
 Delivered :
 - dedicated CLI regression contract test (`test_cli_regression_contract.sh`)
-- explicit success-path CLI coverage for:
-  - `brain graph`
-  - `brain backlinks`
-  - `brain neighbors`
-  - `brain related`
-  - `brain path`
-  - `brain think`
-- explicit ambiguous note resolution error propagation coverage through graph-facing CLI commands
-- global test suite updated without changing dispatcher architecture
+- explicit graph-facing CLI success coverage
+- explicit cognition-facing CLI success coverage
+- deterministic ambiguous resolver error propagation coverage through CLI
 
 Architectural Impact :
-- CLI contract validation is now separated from smoke validation
-- graph-facing and cognition-facing public surfaces have explicit regression protection
-- dispatcher remains orchestration-only
+- Brain CLI gained explicit regression locking
+- Graph-facing and cognition-facing command contracts became auditable
 
 Impact :
-KaoBox strengthened its **public CLI contract**
-without introducing uncontrolled refactor.
+KaoBox strengthened its deterministic CLI contract surface.
 
 ---
+
+## Phase 4.0 — Cognitive Ranking Explainability ✅
+
+Date : 2026-03-11
+
+Delivered :
+- `brain think --trace <query>`
+- deterministic Think trace rendering
+- active focus visibility in Think trace
+- graph context visibility in Think trace
+- score component visibility:
+  - relevance
+  - focus boost
+  - graph boost
+  - graph distance
+  - composite
+- dedicated explainability validation coverage
+
+Architectural Impact :
+- Think Engine gained a first-class explainability surface
+- Cognitive ranking became inspectable without breaking orchestration boundaries
+- Observability expanded from raw query explanation to full ranking explanation
+
+Impact :
+KaoBox moved from cognitive ranking to **cognitive ranking explainability**.
 

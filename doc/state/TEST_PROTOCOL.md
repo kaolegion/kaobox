@@ -1,7 +1,7 @@
 # KaoBox Test Protocol
 
 Version: v2.9
-Aligned with Phase 3.9 CLI regression contract
+Aligned with Phase 4.0 cognitive ranking explainability
 
 A version can be validated only if all checks pass.
 
@@ -163,10 +163,15 @@ Checks :
 - Default graph boost remains stable
 - `BRAIN_THINK_GRAPH_BOOST` override is applied only when valid
 - Invalid `BRAIN_THINK_GRAPH_BOOST` falls back deterministically to `THINK_GRAPH_BOOST`
+- `brain think --trace <query>` exposes deterministic explainability output
+- Think trace displays graph context and score component breakdown
+- Think trace ranking explanation remains stable across repeated runs
 
 Verification :
 brain think <query>
+brain think --trace <query>
 ./tests/test_think_graph_boost.sh
+./tests/test_think_trace.sh
 
 Expected :
 - results sorted by composite score
@@ -175,6 +180,8 @@ Expected :
 - indirect path results are eligible through bounded path-aware expansion
 - runtime graph weighting remains bounded and deterministic
 - direct graph boost compatibility remains preserved
+- Think trace exposes active focus, graph context, relevance, focus boost, graph boost, graph distance, and composite score
+- Think trace output remains deterministic
 
 ---
 

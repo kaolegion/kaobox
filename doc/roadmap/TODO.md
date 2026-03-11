@@ -1,7 +1,7 @@
 # KaoBox TODO
 
 Version: v2.9
-Aligned with Phase 3.9 completion
+Aligned with Phase 4.0 completion
 
 ---
 
@@ -242,6 +242,39 @@ for graph-facing and cognition-facing surfaces.
 
 ---
 
+# DONE (Phase 4.0 — Cognitive Ranking Explainability)
+
+Goal achieved: expose deterministic explainability for Think Engine ranking.
+
+## Delivered
+
+- [x] `brain think --trace <query>`
+- [x] Deterministic Think trace output
+- [x] Active focus visibility in Think trace
+- [x] Graph context visibility in Think trace
+- [x] Score component visibility:
+  - relevance
+  - focus boost
+  - graph boost
+  - graph distance
+  - composite
+- [x] No uncontrolled refactor
+- [x] CLI remains orchestration-only
+
+## Tests
+
+- [x] New explainability validation test (`test_think_trace.sh`)
+- [x] Global test suite updated
+- [x] Targeted validation passed
+- [x] Full deterministic validation passed
+
+Outcome:
+
+KaoBox now exposes a **deterministic cognitive ranking explainability surface**
+through the Think CLI.
+
+---
+
 # Phase 3.8 — Graph Expansion
 
 Goal: deepen graph exploitation beyond direct related notes.
@@ -258,39 +291,3 @@ Phase 3.8 is now complete.
 # Short Term (Stabilization Layer)
 
 - [x] CLI regression test suite
-- [ ] Index stress test
-- [ ] Concurrent indexing validation
-- [ ] Structured logging format (JSON-compatible)
-- [ ] State validation command (`brain validate`)
-- [ ] Memory indexing performance benchmarks
-- [ ] Module capability introspection
-
----
-
-# Mid Term (Phase 4 Preparation)
-
-- [ ] Hybrid semantic ranking (FTS + graph)
-- [ ] Context reinforcement signals
-- [ ] Execution policy framework
-- [ ] Multi-module orchestration model
-- [ ] Agent task routing prototype
-
----
-
-# Long Term (Distributed Brain)
-
-- [ ] Snapshot export/import
-- [ ] Remote node synchronization
-- [ ] Multi-instance coordination
-- [ ] External toolchain connectors
-- [ ] Replication strategy design
-
----
-
-# Architectural Constraint Reminder
-
-All future work must :
-- Preserve Core determinism
-- Maintain module isolation
-- Avoid hidden state
-- Remain reversible where possible

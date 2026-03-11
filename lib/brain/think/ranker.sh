@@ -2,7 +2,7 @@
 
 # ==========================================================
 # KaoBox Brain - Think Ranker
-# Composite Scoring v1.4
+# Composite Scoring v1.5
 # ----------------------------------------------------------
 # Score model:
 #   composite = relevance + focus_boost + graph_boost
@@ -125,6 +125,34 @@ graph_boost_for_path() {
     printf "0\n"
 }
 
+graph_distance_for_context_path() {
+    local candidate_path="${1:-}"
+    local graph_context="${2:-}"
+    local path=""
+    local distance=""
+
+    [[ -n "$candidate_path" ]] || {
+        printf "\n"
+        return 0
+    }
+
+    [[ -n "$graph_context" ]] || {
+        printf "\n"
+        return 0
+    }
+
+    while IFS=$'\t' read -r _ path _ distance; do
+        [[ -n "${path:-}" ]] || continue
+
+        if [[ "$path" == "$candidate_path" ]]; then
+            printf "%s\n" "$distance"
+            return 0
+        fi
+    done <<< "$graph_context"
+
+    printf "\n"
+}
+
 graph_boost_for_context_path() {
     local candidate_path="${1:-}"
     local graph_context="${2:-}"
@@ -153,6 +181,52 @@ graph_boost_for_context_path() {
     printf "0\n"
 }
 
+think_score_components() {
+    local focus="${1:-}"
+    local line="${2:-}"
+    local id=""
+    local path=""
+    local title=""
+    local raw_score=""
+    local relevance=""
+    local focus_boost="0"
+    local graph_boost="0"
+    local composite=""
+    local graph_distance=""
+
+    [[ -n "${line:-}" ]] || return 1
+
+    IFS=$'\t' read -r id path title raw_score <<< "$line"
+    [[ -n "${path:-}" && -n "${raw_score:-}" ]] || return 1
+
+    relevance="$(awk "BEGIN { print -1 * ($raw_score) }")"
+
+    if [[ -n "${focus:-}" && "$path" == "$focus" ]]; then
+        focus_boost="$THINK_FOCUS_BOOST"
+    fi
+
+    if [[ -n "${THINK_GRAPH_CONTEXT:-}" ]]; then
+        graph_boost="$(graph_boost_for_context_path "$path" "$THINK_GRAPH_CONTEXT")"
+        graph_distance="$(graph_distance_for_context_path "$path" "$THINK_GRAPH_CONTEXT")"
+    else
+        graph_boost="$(graph_boost_for_path "$path" "$THINK_GRAPH_PATHS")"
+        graph_distance=""
+    fi
+
+    composite="$(awk "BEGIN { print ($relevance) + ($focus_boost) + ($graph_boost) }")"
+
+    printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" \
+        "$composite" \
+        "$id" \
+        "$path" \
+        "$title" \
+        "$raw_score" \
+        "$relevance" \
+        "$focus_boost" \
+        "$graph_boost" \
+        "$graph_distance"
+}
+
 # ==========================================================
 # Ranking Function
 # ==========================================================
@@ -173,36 +247,36 @@ think_rank_results() {
 
     local results=("$@")
     local line=""
-    local path=""
-    local raw_score=""
-    local relevance=""
-    local focus_boost=""
-    local graph_boost=""
-    local composite=""
+    local scored=""
 
     for line in "${results[@]}"; do
         [[ -n "${line:-}" ]] || continue
 
-        IFS=$'\t' read -r _ path _ raw_score <<< "$line"
+        scored="$(think_score_components "$focus" "$line" || true)"
+        [[ -n "${scored:-}" ]] || continue
 
-        [[ -n "${path:-}" && -n "${raw_score:-}" ]] || continue
+        printf "%s\n" "$scored"
+    done \
+        | sort -t$'\t' -k1,1nr -k3,3 \
+        | while IFS=$'\t' read -r _ id path title raw_score _ _ _ _; do
+            printf "%s\t%s\t%s\t%s\n" "$id" "$path" "$title" "$raw_score"
+        done
+}
 
-        relevance="$(awk "BEGIN { print -1 * ($raw_score) }")"
-        focus_boost="0"
-        graph_boost="0"
+think_rank_results_trace() {
+    local focus="${1:-}"
+    shift || true
 
-        if [[ -n "${focus:-}" && "$path" == "$focus" ]]; then
-            focus_boost="$THINK_FOCUS_BOOST"
-        fi
+    local results=("$@")
+    local line=""
+    local scored=""
 
-        if [[ -n "${THINK_GRAPH_CONTEXT:-}" ]]; then
-            graph_boost="$(graph_boost_for_context_path "$path" "$THINK_GRAPH_CONTEXT")"
-        else
-            graph_boost="$(graph_boost_for_path "$path" "$THINK_GRAPH_PATHS")"
-        fi
+    for line in "${results[@]}"; do
+        [[ -n "${line:-}" ]] || continue
 
-        composite="$(awk "BEGIN { print ($relevance) + ($focus_boost) + ($graph_boost) }")"
+        scored="$(think_score_components "$focus" "$line" || true)"
+        [[ -n "${scored:-}" ]] || continue
 
-        printf "%s|%s\n" "$composite" "$line"
-    done | sort -t'|' -k1,1nr -k2,2
+        printf "%s\n" "$scored"
+    done | sort -t$'\t' -k1,1nr -k3,3
 }

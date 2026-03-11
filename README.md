@@ -25,6 +25,7 @@ Examples :
 brain status
 brain search "query"
 brain think "query"
+brain think --trace "query"
 brain graph test
 brain backlinks test
 brain neighbors test
@@ -52,7 +53,7 @@ Main layers :
 Track: **v2.9**
 
 Current phase :
-**Phase 3.9 — CLI Regression Contract**
+**Phase 4.0 — Cognitive Ranking Explainability**
 
 ## Delivered capabilities
 
@@ -83,6 +84,7 @@ Current phase :
 - graph-aware ranking
 - configurable graph weighting
 - path-aware context expansion
+- deterministic think trace explainability
 - CLI regression contract coverage
 
 Ranking model :
@@ -104,6 +106,13 @@ Current path-aware graph weighting semantics:
 - distance 2 → decayed graph boost
 - distance 3 → decayed graph boost
 - bounded minimum boost remains deterministic
+
+Think trace explainability supports:
+- `brain think --trace <query>`
+- active focus visibility
+- graph context visibility
+- score component visibility
+- deterministic ranking explanation output
 
 ---
 
@@ -184,6 +193,7 @@ The test suite validates :
 - graph-aware ranking
 - configurable graph weighting override/fallback
 - path-aware context expansion
+- think trace explainability
 - graph export determinism
 - graph export CLI surface
 - CLI smoke commands

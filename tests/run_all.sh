@@ -54,6 +54,9 @@ echo "[RUN] test_graph_export_cli.sh"
 echo "[RUN] test_think_graph_boost.sh"
 ./tests/test_think_graph_boost.sh
 
+echo "[RUN] test_think_trace.sh"
+./tests/test_think_trace.sh
+
 # ----------------------------------------------------------
 # CLI
 # ----------------------------------------------------------
