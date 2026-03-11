@@ -60,4 +60,7 @@ echo "[RUN] test_think_graph_boost.sh"
 echo "[RUN] test_brain_cli.sh"
 ./tests/test_brain_cli.sh
 
+echo "[RUN] test_cli_regression_contract.sh"
+./tests/test_cli_regression_contract.sh
+
 echo "[SUCCESS] All tests passed"

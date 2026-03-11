@@ -1,7 +1,7 @@
 # KaoBox TODO
 
 Version: v2.9
-Aligned with Phase 3.8.c completion
+Aligned with Phase 3.9 completion
 
 ---
 
@@ -209,6 +209,39 @@ for graph-facing note resolution surfaces.
 
 ---
 
+# DONE (Phase 3.9 — CLI Regression Contract)
+
+Goal achieved: strengthen the Brain CLI contract with explicit regression coverage
+for graph-facing and cognition-facing commands.
+
+## Delivered
+
+- [x] Dedicated CLI regression contract test (`test_cli_regression_contract.sh`)
+- [x] Explicit graph-facing CLI success coverage:
+  - `brain graph`
+  - `brain backlinks`
+  - `brain neighbors`
+  - `brain related`
+  - `brain path`
+- [x] Explicit cognition-facing CLI success coverage:
+  - `brain think`
+- [x] Deterministic ambiguous resolver error propagation coverage through CLI commands
+- [x] Global test suite updated
+- [x] CLI remains orchestration-only
+
+## Tests
+
+- [x] New contract test added to full suite
+- [x] Targeted validation passed
+- [x] Full deterministic validation passed
+
+Outcome:
+
+KaoBox now enforces a **stronger CLI regression contract**
+for graph-facing and cognition-facing surfaces.
+
+---
+
 # Phase 3.8 — Graph Expansion
 
 Goal: deepen graph exploitation beyond direct related notes.
@@ -224,7 +257,7 @@ Phase 3.8 is now complete.
 
 # Short Term (Stabilization Layer)
 
-- [ ] CLI regression test suite
+- [x] CLI regression test suite
 - [ ] Index stress test
 - [ ] Concurrent indexing validation
 - [ ] Structured logging format (JSON-compatible)

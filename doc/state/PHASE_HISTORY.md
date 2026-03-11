@@ -352,3 +352,33 @@ Architectural Impact :
 Impact :
 KaoBox strengthened graph-facing correctness by replacing silent ambiguous fallback
 with deterministic rejection and explicit operator feedback.
+
+---
+
+## Phase 3.9 — CLI Regression Contract ✅
+
+Date : 2026-03-11
+
+Delivered :
+- dedicated CLI regression contract test (`test_cli_regression_contract.sh`)
+- explicit success-path CLI coverage for:
+  - `brain graph`
+  - `brain backlinks`
+  - `brain neighbors`
+  - `brain related`
+  - `brain path`
+  - `brain think`
+- explicit ambiguous note resolution error propagation coverage through graph-facing CLI commands
+- global test suite updated without changing dispatcher architecture
+
+Architectural Impact :
+- CLI contract validation is now separated from smoke validation
+- graph-facing and cognition-facing public surfaces have explicit regression protection
+- dispatcher remains orchestration-only
+
+Impact :
+KaoBox strengthened its **public CLI contract**
+without introducing uncontrolled refactor.
+
+---
+

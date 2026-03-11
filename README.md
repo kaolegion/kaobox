@@ -52,7 +52,7 @@ Main layers :
 Track: **v2.9**
 
 Current phase :
-**Phase 3.8 — Graph Expansion**
+**Phase 3.9 — CLI Regression Contract**
 
 ## Delivered capabilities
 
@@ -83,6 +83,7 @@ Current phase :
 - graph-aware ranking
 - configurable graph weighting
 - path-aware context expansion
+- CLI regression contract coverage
 
 Ranking model :
 composite = normalized_fts + focus_boost + graph_boost
@@ -186,6 +187,7 @@ The test suite validates :
 - graph export determinism
 - graph export CLI surface
 - CLI smoke commands
+- CLI regression contract coverage
 
 ---
 

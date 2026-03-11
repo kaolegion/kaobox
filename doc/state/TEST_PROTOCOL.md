@@ -1,7 +1,7 @@
 # KaoBox Test Protocol
 
 Version: v2.9
-Aligned with Phase 3.8.c ambiguous note resolution policy
+Aligned with Phase 3.9 CLI regression contract
 
 A version can be validated only if all checks pass.
 
@@ -209,8 +209,20 @@ Checks :
 - no uncaught errors
 - dispatcher contains no business logic
 - `set -o pipefail` safe
+- smoke CLI coverage remains lightweight
+- explicit regression contract coverage exists for graph-facing and cognition-facing commands
 
 CLI must orchestrate, not compute.
+
+Verification :
+./tests/test_brain_cli.sh
+./tests/test_cli_regression_contract.sh
+
+Expected :
+- smoke command wiring remains valid
+- explicit CLI success paths remain stable
+- graph-facing ambiguous resolver errors propagate deterministically through the CLI
+- cognition-facing CLI results remain contractually covered
 
 ---
 
