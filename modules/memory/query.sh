@@ -148,25 +148,6 @@ SQL
 #   id<TAB>path<TAB>title<TAB>updated_at
 #
 # Resolution priority:
-#   1. exact path
-#   2. exact title
-#   3. exact basename(path)
-#   4. exact basename(path) without .md
-#   5. partial path/title match
-#
-# Deterministic:
-#   priority asc, updated_at desc, path asc
-# ----------------------------------------------------------
-
-# ----------------------------------------------------------
-# Resolve Note Reference
-# ----------------------------------------------------------
-# Input:
-#   partial path, filename, filename without .md, or title
-# Output:
-#   id<TAB>path<TAB>title<TAB>updated_at
-#
-# Resolution priority:
 #   1. exact full path
 #   2. exact title
 #   3. exact filename suffix      (%/<ref>)
@@ -175,9 +156,14 @@ SQL
 #
 # Deterministic:
 #   priority asc, updated_at desc, path asc
+#
+# Ambiguity policy:
+#   - no candidate              -> error
+#   - single best candidate     -> resolved
+#   - multiple best candidates  -> error
 # ----------------------------------------------------------
 
-resolve_note_ref() {
+_resolve_note_ref_candidates() {
 
     [[ -n "${BRAIN_DB:-}" ]] || {
         echo "[Query] BRAIN_DB not defined" >&2
@@ -214,12 +200,67 @@ WITH ranked AS (
 SELECT id,
        path,
        title,
-       updated_at
+       updated_at,
+       priority
 FROM ranked
 WHERE priority < 99
-ORDER BY priority ASC, updated_at DESC, path ASC
-LIMIT 1;
+ORDER BY priority ASC, updated_at DESC, path ASC;
 SQL
+}
+
+resolve_note_ref() {
+
+    [[ -n "${BRAIN_DB:-}" ]] || {
+        echo "[Query] BRAIN_DB not defined" >&2
+        return 1
+    }
+
+    local ref="${1:-}"
+    local -a candidates=()
+
+    [[ -n "$ref" ]] || {
+        echo "[Query] Empty note reference" >&2
+        return 1
+    }
+
+    mapfile -t candidates < <(_resolve_note_ref_candidates "$ref")
+
+    [[ ${#candidates[@]} -gt 0 ]] || {
+        echo "[Query] Note not found: $ref" >&2
+        return 1
+    }
+
+    local first_line="${candidates[0]}"
+    local first_id first_path first_title first_updated first_priority
+    IFS=$'\t' read -r first_id first_path first_title first_updated first_priority <<< "$first_line"
+
+    [[ -n "${first_priority:-}" ]] || {
+        echo "[Query] Failed to resolve note reference: $ref" >&2
+        return 1
+    }
+
+    local tie_count=0
+    local line id path title updated priority
+    local ambiguity_lines=""
+
+    for line in "${candidates[@]}"; do
+        IFS=$'\t' read -r id path title updated priority <<< "$line"
+        [[ "${priority:-}" == "$first_priority" ]] || break
+
+        tie_count=$((tie_count + 1))
+        if (( tie_count <= 5 )); then
+            ambiguity_lines+=" - ${title:-\"(untitled)\"} | ${path}"$'\n'
+        fi
+    done
+
+    if (( tie_count > 1 )); then
+        printf '[Query] Ambiguous note reference: %s\n' "$ref" >&2
+        printf '[Query] Matching candidates:\n' >&2
+        printf '%s' "$ambiguity_lines" >&2
+        return 1
+    fi
+
+    printf '%s\t%s\t%s\t%s\n'         "$first_id"         "$first_path"         "$first_title"         "$first_updated"
 }
 
 # ----------------------------------------------------------

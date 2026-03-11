@@ -259,21 +259,13 @@ source_path<TAB>target_path
 - `brain export graph --format tsv`
 - CLI remains orchestration-only
 
-### Tests
-
-- `test_graph_export.sh`
-- `test_graph_export_cli.sh`
-- CLI smoke test updated
-- global test suite updated
-
 Architectural Impact :
-- Graph became exportable as a reusable deterministic surface
-- Export logic remained module-owned
-- CLI preserved orchestration-only responsibilities
+- Graph export became a first-class reusable surface
+- Export logic remained module-owned and deterministic
+- CLI export remained orchestration-only
 
 Impact :
-KaoBox moved from graph-aware cognition
-to **deterministic graph export**.
+KaoBox moved from graph cognition to graph externalization.
 
 ---
 
@@ -283,23 +275,17 @@ Date : 2026-03-10
 
 Delivered :
 - `brain related <note>`
-- direct reuse of graph proximity query API
-- deterministic direct related notes surface
+- direct graph proximity exposed as user-facing CLI surface
+- deterministic related notes rendering
 - CLI remains orchestration-only
-
-Tests :
-- `test_graph_related.sh`
-- CLI smoke test extended with `brain related`
-- global test suite updated
+- dedicated related notes validation coverage
 
 Architectural Impact :
-- Direct graph proximity became a first-class user-facing navigation command
-- Existing graph query primitives were reused without duplicating graph logic
-- CLI remained a thin orchestration surface
+- Graph proximity became directly explorable from CLI
+- Related note discovery moved from internal query capability to stable user surface
 
 Impact :
-KaoBox moved from graph export
-to **direct graph exploitation**.
+KaoBox moved from graph export to graph exploitation.
 
 ---
 
@@ -310,25 +296,15 @@ Date : 2026-03-10
 Delivered :
 - runtime graph boost override via `BRAIN_THINK_GRAPH_BOOST`
 - deterministic fallback to `THINK_GRAPH_BOOST`
+- no Think Engine orchestration regression
 - additive ranker-only implementation
-- no Think Engine orchestration change
-- no CLI contract change
-
-Tests :
-- `test_think_graph_boost.sh` extended
-- default graph boost preserved
-- runtime override validated
-- invalid override fallback validated
-- global test suite passed
 
 Architectural Impact :
 - Graph weighting became runtime-configurable
-- Existing ranking model remained stable
-- Deterministic behavior was preserved through bounded override resolution
+- Deterministic ranking contract remained preserved
 
 Impact :
-KaoBox moved from direct graph exploitation
-to **configurable graph-aware ranking**.
+KaoBox gained configurable graph ranking behavior without losing determinism.
 
 ---
 
@@ -339,25 +315,40 @@ Date : 2026-03-10
 Delivered :
 - bounded graph context query API (`query_graph_context_by_note`)
 - deterministic BFS shortest-path expansion from active focus
-- Think Engine support for path-aware graph context
-- distance-aware graph weighting in ranker
-- compatibility preserved with direct graph boost behavior
-- no CLI contract change
-
-Tests :
-- `test_think_graph_boost.sh` extended
-- direct neighbor ranking preserved
-- indirect path ranking validated
-- distance-aware weighting validated
-- runtime override compatibility validated
-- global test suite passed
+- Think Engine path-aware graph context loading
+- distance-aware graph weighting
+- compatibility with prior direct graph boost behavior
 
 Architectural Impact :
-- Think Engine now expands graph context beyond direct neighbors
-- Path-derived context remains module-owned and deterministically bounded
-- Ranking model now integrates graph distance without breaking existing direct proximity behavior
+- Graph cognition expanded beyond direct neighbors
+- Active focus now propagates bounded path-aware graph context
 
 Impact :
-KaoBox moved from configurable graph-aware ranking
-to **path-aware cognitive expansion**.
+KaoBox gained bounded path-aware graph cognition.
 
+---
+
+## Phase 3.8.c — Ambiguous Note Resolution Policy ✅
+
+Date : 2026-03-11
+
+Delivered :
+- strict resolver candidate ranking in `modules/memory/query.sh`
+- explicit deterministic rejection of ambiguous best-match references
+- resolver error propagation through:
+  - `brain graph`
+  - `brain backlinks`
+  - `brain neighbors`
+  - `brain related`
+  - `brain path`
+- dedicated resolver contract validation test (`test_note_ref_resolution.sh`)
+- ambiguous note rejection coverage in `test_graph_related.sh`
+
+Architectural Impact :
+- Graph-facing note resolution is no longer silently permissive
+- Resolver ambiguity became explicit, bounded, and deterministic
+- CLI graph surfaces now preserve resolver contract fidelity
+
+Impact :
+KaoBox strengthened graph-facing correctness by replacing silent ambiguous fallback
+with deterministic rejection and explicit operator feedback.

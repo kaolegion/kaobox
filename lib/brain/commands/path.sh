@@ -41,18 +41,16 @@ cmd_path() {
     log_info "Resolving path: $from_query -> $to_query"
 
     local from_resolved to_resolved
-    from_resolved="$(resolve_note_ref "$from_query")"
-    to_resolved="$(resolve_note_ref "$to_query")"
 
-    [[ -n "${from_resolved:-}" ]] || {
-        log_error "Source note not found."
+    if ! from_resolved="$(resolve_note_ref "$from_query" 2>&1)"; then
+        log_error "$from_resolved"
         return 1
-    }
+    fi
 
-    [[ -n "${to_resolved:-}" ]] || {
-        log_error "Target note not found."
+    if ! to_resolved="$(resolve_note_ref "$to_query" 2>&1)"; then
+        log_error "$to_resolved"
         return 1
-    }
+    fi
 
     local from_id from_path from_title from_updated
     local to_id to_path to_title to_updated

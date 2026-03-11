@@ -1,7 +1,7 @@
 # KaoBox Test Protocol
 
 Version: v2.9
-Aligned with Phase 3.8.b path-aware context expansion
+Aligned with Phase 3.8.c ambiguous note resolution policy
 
 A version can be validated only if all checks pass.
 
@@ -85,6 +85,8 @@ Checks :
 - `brain path <a> <b>` returns a deterministic traversal when a path exists
 - Two-pass batch reindex resolves forward links correctly
 - Graph proximity query returns deterministic neighbors
+- Ambiguous graph-facing note references are rejected explicitly and deterministically
+- Resolver candidate ordering remains deterministic
 
 Verification :
 brain graph <note>
@@ -92,6 +94,7 @@ brain backlinks <note>
 brain neighbors <note>
 brain related <note>
 brain path <a> <b>
+./tests/test_note_ref_resolution.sh
 sqlite3 brain.db "SELECT COUNT(*) FROM links;"
 
 ---
@@ -245,6 +248,8 @@ Checks :
 - Graph query twice → identical ordering
 - Related query twice → identical ordering
 - Path query twice → identical traversal
+- Note resolution for the same unambiguous reference is identical across repeated calls
+- Ambiguous note resolution returns identical candidate ordering across repeated calls
 - No hidden runtime memory
 - No implicit global mutation
 
@@ -258,8 +263,5 @@ Adaptive behavior must remain bounded to modules.
 
 All checks must pass before :
 - Phase closure
-- Version bump
 - Release tagging
-- Documentation freeze
-
-Failure of any check blocks release.
+- Push validation

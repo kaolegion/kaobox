@@ -39,12 +39,10 @@ cmd_backlinks() {
     log_info "Resolving backlinks for: $query"
 
     local resolved
-    resolved="$(resolve_note_ref "$query")"
-
-    [[ -n "${resolved:-}" ]] || {
-        log_error "Note not found."
+    if ! resolved="$(resolve_note_ref "$query" 2>&1)"; then
+        log_error "$resolved"
         return 1
-    }
+    fi
 
     local note_id note_path note_title note_updated
     IFS=$'\t' read -r note_id note_path note_title note_updated <<< "$resolved"

@@ -1,7 +1,7 @@
 # KaoBox TODO
 
 Version: v2.9
-Aligned with Phase 3.8.b completion
+Aligned with Phase 3.8.c completion
 
 ---
 
@@ -178,13 +178,47 @@ while preserving deterministic ranking behavior.
 
 ---
 
+# DONE (Phase 3.8.c — Ambiguous Note Resolution Policy)
+
+Goal achieved: make note resolution strict and deterministic for graph-facing commands.
+
+## Delivered
+
+- [x] Strict resolver candidate ranking in `modules/memory/query.sh`
+- [x] Explicit deterministic rejection of ambiguous best-match note references
+- [x] Graph command propagation for resolver errors:
+  - `brain graph`
+  - `brain backlinks`
+  - `brain neighbors`
+  - `brain related`
+  - `brain path`
+- [x] No uncontrolled refactor
+- [x] CLI remains orchestration-only
+
+## Tests
+
+- [x] New resolver contract validation test (`test_note_ref_resolution.sh`)
+- [x] `test_graph_related.sh` extended with ambiguous note rejection coverage
+- [x] Global test suite updated
+- [x] Full deterministic validation passed
+
+Outcome:
+
+KaoBox now enforces a **strict deterministic ambiguous note resolution policy**
+for graph-facing note resolution surfaces.
+
+---
+
 # Phase 3.8 — Graph Expansion
 
 Goal: deepen graph exploitation beyond direct related notes.
 
 ## Remaining
 
-- [ ] Stronger ambiguous note resolution policy
+- [x] Stronger ambiguous note resolution policy
+
+Outcome:
+Phase 3.8 is now complete.
 
 ---
 

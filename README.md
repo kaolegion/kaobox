@@ -74,6 +74,7 @@ Current phase :
 - graph proximity queries
 - graph export
 - bounded graph context expansion
+- strict ambiguous note rejection for graph note resolution
 
 ### Think engine
 
@@ -117,6 +118,11 @@ These commands operate on the indexed markdown graph stored in the memory engine
 
 `brain related <note>` exposes deterministic direct graph proximity
 as a read-only CLI surface.
+
+Graph note resolution is now strict and deterministic:
+- unique best match → resolved
+- no match → explicit error
+- ambiguous best match set → explicit deterministic rejection with candidate list
 
 ---
 
@@ -172,6 +178,8 @@ The test suite validates :
 - graph proximity
 - graph related command
 - graph path traversal
+- note reference resolution contract
+- ambiguous note rejection for graph commands
 - graph-aware ranking
 - configurable graph weighting override/fallback
 - path-aware context expansion
