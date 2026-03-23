@@ -377,3 +377,12 @@ Stable cognitive kernel with :
 - graph traversal capabilities
 - graph-aware ranking
 - deterministic graph export exposed through CLI
+
+### Thermal Cognition Layer
+
+A thermal propagation layer enriches the Think Engine ranking model.
+
+This layer introduces a local cognitive field derived from focus heat.
+
+See:
+doc/systemic/thermal_cognitive_field.md

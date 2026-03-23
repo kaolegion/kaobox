@@ -1575,3 +1575,13 @@ Which includes :
 - test_graph_proximity.sh
 - test_think_graph_boost.sh
 - test_brain_cli.sh
+
+### Thermal Cognitive Field
+
+KaoBox introduces a local thermal cognition mechanism.
+
+See canonical primitive:
+doc/systemic/thermal_cognitive_field.md
+
+This mechanism propagates heat from the active focus
+through graph distance and influences contextual ranking.
