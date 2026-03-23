@@ -2,10 +2,10 @@
 
 # ==========================================================
 # KaoBox Brain - Think Ranker
-# Composite Scoring v1.5
+# Composite Scoring v1.6
 # ----------------------------------------------------------
 # Score model:
-#   composite = relevance + focus_boost + graph_boost
+#   composite = relevance + focus_boost + graph_boost + heat_boost
 #
 # Input line format (expected):
 #   id<TAB>path<TAB>title<TAB>raw_score
@@ -15,6 +15,7 @@
 #   - relevance is normalized as positive: -1 * raw_score
 #   - THINK_GRAPH_PATHS keeps direct binary compatibility
 #   - THINK_GRAPH_CONTEXT enables path-aware distance scoring
+#   - heat is optional and extracted from projected note metadata
 # ==========================================================
 
 [[ -n "${BRAIN_THINK_RANKER_LOADED:-}" ]] && return 0
@@ -27,6 +28,9 @@ readonly BRAIN_THINK_RANKER_LOADED=1
 : "${THINK_GRAPH_BOOST:=2}"
 : "${THINK_GRAPH_PATHS:=}"
 : "${THINK_GRAPH_CONTEXT:=}"
+: "${THINK_HEAT_ENABLED:=1}"
+: "${THINK_HEAT_CAP:=3}"
+: "${THINK_HEAT_FACTOR:=0.5}"
 
 # ==========================================================
 # Helpers
@@ -181,6 +185,47 @@ graph_boost_for_context_path() {
     printf "0\n"
 }
 
+_extract_note_heat() {
+    local note_path="${1:-}"
+    local heat="0"
+
+    [[ "${THINK_HEAT_ENABLED:-1}" == "1" ]] || {
+        printf "0\n"
+        return 0
+    }
+
+    [[ -n "${note_path:-}" && -f "$note_path" ]] || {
+        printf "0\n"
+        return 0
+    }
+
+    heat="$(grep -E '^Heat:[[:space:]]*[0-9]+' "$note_path" 2>/dev/null | head -n1 | sed -E 's/^Heat:[[:space:]]*([0-9]+).*$/\1/' || true)"
+
+    if [[ -z "${heat:-}" ]]; then
+        heat="$(grep -Eo '#heat-[0-9]+' "$note_path" 2>/dev/null | head -n1 | sed -E 's/^#heat-([0-9]+)$/\1/' || true)"
+    fi
+
+    [[ -n "${heat:-}" && "$heat" =~ ^[0-9]+$ ]] || heat="0"
+    printf "%s\n" "$heat"
+}
+
+_compute_heat_boost() {
+    local heat="${1:-0}"
+    local factor="${THINK_HEAT_FACTOR:-0.5}"
+    local cap="${THINK_HEAT_CAP:-3}"
+
+    [[ "$heat" =~ ^[0-9]+$ ]] || heat="0"
+
+    awk -v h="$heat" -v factor="$factor" -v cap="$cap" '
+        BEGIN {
+            boost = h * factor
+            if (boost > cap) boost = cap
+            if (boost < 0) boost = 0
+            print boost
+        }
+    '
+}
+
 think_score_components() {
     local focus="${1:-}"
     local line="${2:-}"
@@ -191,6 +236,8 @@ think_score_components() {
     local relevance=""
     local focus_boost="0"
     local graph_boost="0"
+    local heat="0"
+    local heat_boost="0"
     local composite=""
     local graph_distance=""
 
@@ -213,9 +260,12 @@ think_score_components() {
         graph_distance=""
     fi
 
-    composite="$(awk "BEGIN { print ($relevance) + ($focus_boost) + ($graph_boost) }")"
+    heat="$(_extract_note_heat "$path")"
+    heat_boost="$(_compute_heat_boost "$heat")"
 
-    printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" \
+    composite="$(awk "BEGIN { print ($relevance) + ($focus_boost) + ($graph_boost) + ($heat_boost) }")"
+
+    printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" \
         "$composite" \
         "$id" \
         "$path" \
@@ -224,22 +274,10 @@ think_score_components() {
         "$relevance" \
         "$focus_boost" \
         "$graph_boost" \
-        "$graph_distance"
+        "$graph_distance" \
+        "$heat" \
+        "$heat_boost"
 }
-
-# ==========================================================
-# Ranking Function
-# ==========================================================
-# Usage:
-#   think_rank_results "<focus_path>" "${results[@]}"
-#
-# Optional graph context:
-#   THINK_GRAPH_PATHS="/path/a.md
-#   /path/b.md"
-#
-#   THINK_GRAPH_CONTEXT="1<TAB>/path/a.md<TAB>Title A<TAB>1
-#   2<TAB>/path/b.md<TAB>Title B<TAB>2"
-# ==========================================================
 
 think_rank_results() {
     local focus="${1:-}"
@@ -258,9 +296,7 @@ think_rank_results() {
         printf "%s\n" "$scored"
     done \
         | sort -t$'\t' -k1,1nr -k3,3 \
-        | while IFS=$'\t' read -r _ id path title raw_score _ _ _ _; do
-            printf "%s\t%s\t%s\t%s\n" "$id" "$path" "$title" "$raw_score"
-        done
+        | awk -F'\t' 'BEGIN{OFS="\t"} {print $2,$3,$4,$1}'
 }
 
 think_rank_results_trace() {
@@ -280,3 +316,12 @@ think_rank_results_trace() {
         printf "%s\n" "$scored"
     done | sort -t$'\t' -k1,1nr -k3,3
 }
+
+# ----------------------------------------------------------
+# Rekon TODO / alert surface
+# ----------------------------------------------------------
+# TODO(REKON): evaluate logarithmic heat boost in v2:
+#   heat_boost = k * log(1 + heat)
+# TODO(REKON): consider optional caching for note heat reads if result sets grow
+# TODO(REKON): add explicit telemetry hook for heat-weight distribution
+# TODO(REKON): evaluate graph + heat interaction after field validation

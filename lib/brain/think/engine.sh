@@ -116,7 +116,7 @@ _print_ranked_trace() {
     echo "----------------------------------------"
 
     think_rank_results_trace "$active_focus" "${results[@]}" \
-        | while IFS=$'\t' read -r composite id path title raw_score relevance focus_boost graph_boost graph_distance; do
+        | while IFS=$'\t' read -r composite id path title raw_score relevance focus_boost graph_boost graph_distance heat heat_boost; do
             [[ -n "${path:-}" ]] || continue
 
             echo "Path         : $path"
@@ -129,8 +129,12 @@ _print_ranked_trace() {
 
             if [[ -n "${graph_distance:-}" ]]; then
                 echo "Graph dist   : $graph_distance"
+            echo "Heat         : ${heat:-0}"
+            echo "Heat boost   : ${heat_boost:-0}"
             else
                 echo "Graph dist   : -"
+            echo "Heat         : ${heat:-0}"
+            echo "Heat boost   : ${heat_boost:-0}"
             fi
 
             echo "Composite    : $composite"
