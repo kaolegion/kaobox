@@ -211,15 +211,12 @@ _extract_note_heat() {
 
 _compute_heat_boost() {
     local heat="${1:-0}"
-    local factor="${THINK_HEAT_FACTOR:-0.5}"
-    local cap="${THINK_HEAT_CAP:-3}"
 
-    [[ "$heat" =~ ^[0-9]+$ ]] || heat="0"
+    [[ "$heat" =~ ^[0-9]+([.][0-9]+)?$ ]] || heat="0"
 
-    awk -v h="$heat" -v factor="$factor" -v cap="$cap" '
+    awk -v h="$heat" '
         BEGIN {
-            boost = h * factor
-            if (boost > cap) boost = cap
+            boost = log(1 + h)
             if (boost < 0) boost = 0
             print boost
         }
@@ -257,7 +254,7 @@ think_score_components() {
         graph_distance="$(graph_distance_for_context_path "$path" "$THINK_GRAPH_CONTEXT")"
     else
         graph_boost="$(graph_boost_for_path "$path" "$THINK_GRAPH_PATHS")"
-        graph_distance=""
+        graph_distance="-"
     fi
 
     heat="$(_extract_note_heat "$path")"
