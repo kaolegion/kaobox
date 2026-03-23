@@ -349,3 +349,43 @@ KaoBox cherche à augmenter la pensée humaine sans sacrifier :
 Ce n’est pas seulement un logiciel.
 
 C’est une **infrastructure cognitive déterministe**.
+
+---
+
+# 13. Documentation Surface Reality
+
+At the current stage of evolution, KaoBox exhibits a dense and expanding documentation field.
+
+A full system inspection reveals the presence of more than one hundred Markdown knowledge files distributed across multiple cognitive layers:
+
+- architectural doctrine
+- runtime state tracking
+- roadmap structures
+- snapshot experiments
+- module contracts
+- cognitive logs
+- repository intelligence formats
+- library context memory
+- test protocols
+
+This observation highlights several structural realities.
+
+First, KaoBox is no longer a lightweight cognitive experiment.
+It has entered a phase of knowledge gravity and documentary mass.
+
+Second, documentation is not merely descriptive.
+It becomes an operational organ of the cognitive system.
+
+Third, uncontrolled documentary expansion may generate entropy,
+requiring future governance mechanisms.
+
+This leads to emerging product discipline:
+
+- convergence toward canonical main sources
+- anatomical mapping of documentation surfaces
+- prioritization based on cognitive heat
+- lab-to-core promotion filtering
+- long-term documentation observability
+
+Documentation is therefore recognized as a native component of cognition within KaoBox.
+

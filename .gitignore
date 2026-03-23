@@ -23,7 +23,7 @@ release_lock
 *.swp
 
 # Snapshots / audit artifacts
-*_SNAPSHOT.sh
+*_SNAPSHOT.*
 tests/tmp/
 
 # KaoBox audit snapshots

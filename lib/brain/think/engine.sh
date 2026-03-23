@@ -2,7 +2,7 @@
 
 # ==========================================================
 # KaoBox Brain - Think Engine
-# Orchestration Layer v1.4
+# Orchestration Layer v1.5
 # ----------------------------------------------------------
 # Responsibilities:
 #   - resolve active cognitive focus
@@ -116,28 +116,27 @@ _print_ranked_trace() {
     echo "----------------------------------------"
 
     think_rank_results_trace "$active_focus" "${results[@]}" \
-        | while IFS=$'\t' read -r composite id path title raw_score relevance focus_boost graph_boost graph_distance heat heat_boost; do
+        | while IFS=$'\t' read -r composite id path title raw_score relevance focus_boost graph_boost graph_distance heat heat_boost thermal_graph_boost; do
             [[ -n "${path:-}" ]] || continue
 
-            echo "Path         : $path"
-            echo "Title        : ${title:-"(untitled)"}"
-            echo "ID           : $id"
-            echo "Raw score    : $raw_score"
-            echo "Relevance    : $relevance"
-            echo "Focus boost  : $focus_boost"
-            echo "Graph boost  : $graph_boost"
+            echo "Path                : $path"
+            echo "Title               : ${title:-"(untitled)"}"
+            echo "ID                  : $id"
+            echo "Raw score           : $raw_score"
+            echo "Relevance           : $relevance"
+            echo "Focus boost         : $focus_boost"
+            echo "Graph boost         : $graph_boost"
 
             if [[ -n "${graph_distance:-}" ]]; then
-                echo "Graph dist   : $graph_distance"
-            echo "Heat         : ${heat:-0}"
-            echo "Heat boost   : ${heat_boost:-0}"
+                echo "Graph dist          : $graph_distance"
             else
-                echo "Graph dist   : -"
-            echo "Heat         : ${heat:-0}"
-            echo "Heat boost   : ${heat_boost:-0}"
+                echo "Graph dist          : -"
             fi
 
-            echo "Composite    : $composite"
+            echo "Heat                : ${heat:-0}"
+            echo "Heat boost          : ${heat_boost:-0}"
+            echo "Thermal graph boost : ${thermal_graph_boost:-0}"
+            echo "Composite           : $composite"
             echo
         done
 }

@@ -2,10 +2,10 @@
 
 # ==========================================================
 # KaoBox Brain - Think Ranker
-# Composite Scoring v1.6
+# Composite Scoring v1.7
 # ----------------------------------------------------------
 # Score model:
-#   composite = relevance + focus_boost + graph_boost + heat_boost
+#   composite = relevance + focus_boost + graph_boost + heat_boost + thermal_graph_boost
 #
 # Input line format (expected):
 #   id<TAB>path<TAB>title<TAB>raw_score
@@ -16,6 +16,7 @@
 #   - THINK_GRAPH_PATHS keeps direct binary compatibility
 #   - THINK_GRAPH_CONTEXT enables path-aware distance scoring
 #   - heat is optional and extracted from projected note metadata
+#   - thermal_graph_boost is weak graph propagation from focus heat
 # ==========================================================
 
 [[ -n "${BRAIN_THINK_RANKER_LOADED:-}" ]] && return 0
@@ -31,6 +32,7 @@ readonly BRAIN_THINK_RANKER_LOADED=1
 : "${THINK_HEAT_ENABLED:=1}"
 : "${THINK_HEAT_CAP:=3}"
 : "${THINK_HEAT_FACTOR:=0.5}"
+: "${THINK_THERMAL_GRAPH_FACTOR:=0.5}"
 
 # ==========================================================
 # Helpers
@@ -223,6 +225,30 @@ _compute_heat_boost() {
     '
 }
 
+_compute_thermal_graph_boost() {
+    local source_heat="${1:-0}"
+    local distance="${2:-}"
+
+    [[ "$source_heat" =~ ^[0-9]+([.][0-9]+)?$ ]] || source_heat="0"
+    [[ "$distance" =~ ^[0-9]+$ ]] || {
+        printf "0\n"
+        return 0
+    }
+
+    (( distance >= 1 )) || {
+        printf "0\n"
+        return 0
+    }
+
+    awk -v h="$source_heat" -v d="$distance" -v k="${THINK_THERMAL_GRAPH_FACTOR:-0.5}" '
+        BEGIN {
+            boost = (k * log(1 + h)) / d
+            if (boost < 0) boost = 0
+            print boost
+        }
+    '
+}
+
 think_score_components() {
     local focus="${1:-}"
     local line="${2:-}"
@@ -235,8 +261,10 @@ think_score_components() {
     local graph_boost="0"
     local heat="0"
     local heat_boost="0"
+    local thermal_graph_boost="0"
     local composite=""
     local graph_distance=""
+    local source_heat="0"
 
     [[ -n "${line:-}" ]] || return 1
 
@@ -260,9 +288,15 @@ think_score_components() {
     heat="$(_extract_note_heat "$path")"
     heat_boost="$(_compute_heat_boost "$heat")"
 
-    composite="$(awk "BEGIN { print ($relevance) + ($focus_boost) + ($graph_boost) + ($heat_boost) }")"
+    if [[ -n "${focus:-}" ]]; then
+        source_heat="$(_extract_note_heat "$focus")"
+    fi
 
-    printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" \
+    thermal_graph_boost="$(_compute_thermal_graph_boost "$source_heat" "$graph_distance")"
+
+    composite="$(awk "BEGIN { print ($relevance) + ($focus_boost) + ($graph_boost) + ($heat_boost) + ($thermal_graph_boost) }")"
+
+    printf "%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n" \
         "$composite" \
         "$id" \
         "$path" \
@@ -273,7 +307,8 @@ think_score_components() {
         "$graph_boost" \
         "$graph_distance" \
         "$heat" \
-        "$heat_boost"
+        "$heat_boost" \
+        "$thermal_graph_boost"
 }
 
 think_rank_results() {
@@ -317,8 +352,7 @@ think_rank_results_trace() {
 # ----------------------------------------------------------
 # Rekon TODO / alert surface
 # ----------------------------------------------------------
-# TODO(REKON): evaluate logarithmic heat boost in v2:
-#   heat_boost = k * log(1 + heat)
-# TODO(REKON): consider optional caching for note heat reads if result sets grow
-# TODO(REKON): add explicit telemetry hook for heat-weight distribution
-# TODO(REKON): evaluate graph + heat interaction after field validation
+# TODO(REKON): add optional cache for repeated focus heat reads if result sets grow
+# TODO(REKON): validate thermal graph propagation on real linked hot focus notes
+# TODO(REKON): evaluate multi-source propagation only after field validation
+# TODO(REKON): add explicit telemetry hook for thermal_graph_boost distribution
